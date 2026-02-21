@@ -1,0 +1,10 @@
+# Workshop TODOs
+- [ ] Go through part 1/2/3
+- [ ] AWS accounts
+  - check with pierre do we have some form of sandbox account/workshop studio/ cloud guru
+- [ ] Align on dates + Send out invites
+
+# Workshop Content TODOS
+- [ ] terraform [modules](modules/TODO)
+- [ ] semi-populate all the terragrunt.hcl for participants
+- [ ] [simple-app](simple-app/TODO) that can be extended for more infra requirements

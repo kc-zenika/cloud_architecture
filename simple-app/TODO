@@ -1,0 +1,8 @@
+
+# Simple Application
+- [ ] index.html page
+- [ ] healthcheck endpoint
+- [ ] read endpoint (for part 2)
+- [ ] configs/secrets from environment variables (for part 2)
+- [ ] 
+- should we use podinfo?
