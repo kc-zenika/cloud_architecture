@@ -1,4 +1,7 @@
-# Part 1
+####################
+###### Part 1 ######
+####################
+
 terraform {
   required_version = ">= 1.0"
 
@@ -229,3 +232,60 @@ resource "aws_network_acl" "private" {
 ###### Part 3 ######
 ####################
 
+# 3.3 IAM policy
+data "aws_iam_policy_document" "app_policy" {
+  statement {
+    sid = "AllowS3Download"
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      "arn:aws:s3:::factquacks-787525931078",
+			"arn:aws:s3:::factquacks-787525931078/*"
+    ]
+  }
+}
+
+resource "aws_iam_policy" "app_policy" {
+  name   = "FactQuacksAppPolicy"
+  description = "Permissions for the FactQuacks application"
+  policy = data.aws_iam_policy_document.app_policy.json
+}
+
+
+# 3.4 IAM Role
+data "aws_iam_policy_document" "app_role_trust_policy" {
+  statement {
+    sid = "AllowEC2ServiceToAssumeRole"
+    actions = [
+      "sts:AssumeRole"
+    ]
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "factquacks_app_role" {
+  name               = "FactQuacksAppRole"
+  assume_role_policy = data.aws_iam_policy_document.app_role_trust_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "app_policy_attach" {
+  role       = aws_iam_role.factquacks_app_role.name
+  policy_arn = aws_iam_policy.app_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "ssm_attach" {
+  role       = aws_iam_role.factquacks_app_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+# 3.5 EC2 instance profile
+resource "aws_iam_instance_profile" "factquacks_instance_profile" {
+  name = "FactQuacksInstanceProfile"
+  role = aws_iam_role.factquacks_app_role.name
+}
