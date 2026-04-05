@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ducks as a Service</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .container {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+      h1 {
+        color: #667eea;
+        margin-bottom: 10px;
+        font-size: 2.5rem;
+      }
+      .duck {
+        width: 350px;
+        height: 350px;
+        object-fit: cover;
+        border-radius: 50%;
+        margin: 20px 0;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+      .fact {
+        font-size: 1.2rem;
+        color: #333;
+        line-height: 1.6;
+        margin: 20px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid #667eea;
+        border-right: 4px solid #667eea;
+      }
+      button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        font-size: 1.1rem;
+        border-radius: 50px;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+      .loading {
+        color: #666;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Ducks As A Service</h1>
+      <h3>Stay quackin’, stay learnin’</h3>
+      <img id="duck" class="duck" src="" alt="Duck" />
+      <p id="fact" class="fact"></p>
+      <button onclick="fetchNew()">Quack Quack?</button>
+    </div>
+
+    <script>
+      async function fetchNew() {
+        const factEl = document.getElementById("fact");
+        const duckEl = document.getElementById("duck");
+
+        factEl.textContent = "Quacking for facts...";
+        duckEl.style.opacity = "0.5";
+        try {
+          const factRes = await fetch(
+            "https://uselessfacts.jsph.pl/api/v2/facts/random?language=en",
+            {
+              headers: { Accept: "application/json" },
+            },
+          );
+
+          if (!factRes.ok) throw new Error("Fact API failed");
+          const factData = await factRes.json();
+
+          // Adding "?t=" + Date.now() ensures the browser doesn't cache the old duck.
+          const newDuckUrl = `https://random-d.uk/api/v2/randomimg?t=${Date.now()}`;
+
+          duckEl.onload = () => {
+            duckEl.style.opacity = "1";
+            factEl.textContent = factData.text;
+          };
+
+          duckEl.src = newDuckUrl;
+        } catch (error) {
+          console.error("The quack failed:", error);
+          factEl.textContent = "Oops! The ducks are busy. Try again?";
+          duckEl.style.opacity = "1";
+        }
+      }
+
+      // Run once on page load
+      fetchNew();
+    </script>
+  </body>
+</html>

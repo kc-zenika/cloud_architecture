@@ -242,15 +242,15 @@ data "aws_iam_policy_document" "app_policy" {
     ]
 
     resources = [
-      "arn:aws:s3:::factquacks-787525931078",
-			"arn:aws:s3:::factquacks-787525931078/*"
+      "arn:aws:s3:::daas-787525931078",
+			"arn:aws:s3:::daas-787525931078/*"
     ]
   }
 }
 
 resource "aws_iam_policy" "app_policy" {
-  name   = "FactQuacksAppPolicy"
-  description = "Permissions for the FactQuacks application"
+  name   = "DaaSAppPolicy"
+  description = "Permissions for the DaaS application"
   policy = data.aws_iam_policy_document.app_policy.json
 }
 
@@ -269,23 +269,23 @@ data "aws_iam_policy_document" "app_role_trust_policy" {
   }
 }
 
-resource "aws_iam_role" "factquacks_app_role" {
-  name               = "FactQuacksAppRole"
+resource "aws_iam_role" "daas_app_role" {
+  name               = "DaaSAppRole"
   assume_role_policy = data.aws_iam_policy_document.app_role_trust_policy.json
 }
 
 resource "aws_iam_role_policy_attachment" "app_policy_attach" {
-  role       = aws_iam_role.factquacks_app_role.name
+  role       = aws_iam_role.daas_app_role.name
   policy_arn = aws_iam_policy.app_policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "ssm_attach" {
-  role       = aws_iam_role.factquacks_app_role.name
+  role       = aws_iam_role.daas_app_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 # 3.5 EC2 instance profile
-resource "aws_iam_instance_profile" "factquacks_instance_profile" {
-  name = "FactQuacksInstanceProfile"
-  role = aws_iam_role.factquacks_app_role.name
+resource "aws_iam_instance_profile" "daas_instance_profile" {
+  name = "DaaSInstanceProfile"
+  role = aws_iam_role.daas_app_role.name
 }
