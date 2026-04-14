@@ -23,6 +23,10 @@ terraform {
   }
 }
 
+####################
+###### Part 2 ######
+####################
+
 locals {
   public_subnets = {
     "ap-southeast-1a" = "10.0.0.0/22"
@@ -36,10 +40,6 @@ locals {
     "ap-southeast-1c" = "10.0.96.0/19"
   }
 }
-
-####################
-###### Part 2 ######
-####################
 
 # 2.3 Create a VPC
 resource "aws_vpc" "main" {
