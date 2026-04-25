@@ -139,21 +139,25 @@ locals {
   nacl_rules = {
     public = {
       ingress = [
-        { rule_no = 100, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 443, to_port = 443 },
+        { rule_no = 100, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 80, to_port = 80 },
+        { rule_no = 110, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 443, to_port = 443 },
         { rule_no = 120, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 1024, to_port = 65535 }
       ]
       egress = [
-        { rule_no = 100, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 443, to_port = 443 },
+        { rule_no = 100, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 80, to_port = 80 },
+        { rule_no = 110, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 443, to_port = 443 },
         { rule_no = 120, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 1024, to_port = 65535 }
       ]
     }
     private = {
       ingress = [
-        { rule_no = 100, protocol = "tcp", action = "allow", cidr_block = "10.0.0.0/16", from_port = 443, to_port = 443 },
-        { rule_no = 120, protocol = "tcp", action = "allow", cidr_block = "10.0.0.0/16", from_port = 1024, to_port = 65535 }
+        { rule_no = 100, protocol = "tcp", action = "allow", cidr_block = "10.0.0.0/16", from_port = 80, to_port = 80 },
+        { rule_no = 110, protocol = "tcp", action = "allow", cidr_block = "10.0.0.0/16", from_port = 443, to_port = 443 },
+        { rule_no = 120, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 1024, to_port = 65535 }
       ]
       egress = [
-        { rule_no = 100, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 443, to_port = 443 },
+        { rule_no = 100, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 80, to_port = 80 },
+        { rule_no = 110, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 443, to_port = 443 },
         { rule_no = 120, protocol = "tcp", action = "allow", cidr_block = "10.0.0.0/16", from_port = 1024, to_port = 65535 }
       ]
     }
@@ -228,6 +232,81 @@ resource "aws_network_acl" "private" {
   }
 }
 
+# 2.8 Security groups
+
+## security group for alb
+resource "aws_security_group" "alb" {
+  name        = "alb"
+  description = "Public ALB Security Group"
+  vpc_id      = aws_vpc.main.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_in_http" {
+  security_group_id = aws_security_group.alb.id
+  cidr_ipv4   = "0.0.0.0/0"
+  ip_protocol = "tcp"
+  from_port   = 80
+  to_port     = 80
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_in_https" {
+  security_group_id = aws_security_group.alb.id
+
+  cidr_ipv4   = "0.0.0.0/0"
+  ip_protocol = "tcp"
+  from_port   = 443
+  to_port     = 443
+}
+
+resource "aws_vpc_security_group_egress_rule" "alb_out_app_http" {
+  security_group_id = aws_security_group.alb.id
+  referenced_security_group_id = aws_security_group.app.id
+  ip_protocol = "tcp"
+  from_port   = 80
+  to_port     = 80
+}
+
+resource "aws_vpc_security_group_egress_rule" "alb_out_app_https" {
+  security_group_id = aws_security_group.alb.id
+  referenced_security_group_id = aws_security_group.app.id
+  ip_protocol = "tcp"
+  from_port   = 443
+  to_port     = 443
+}
+
+
+## security group for app
+resource "aws_security_group" "app" {
+  name        = "app"
+  description = "Private App Security Group"
+  vpc_id      = aws_vpc.main.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "app_in_http" {
+  security_group_id = aws_security_group.app.id
+  referenced_security_group_id = aws_security_group.alb.id
+  ip_protocol = "tcp"
+  from_port   = 80
+  to_port     = 80
+}
+
+resource "aws_vpc_security_group_ingress_rule" "app_in_https" {
+  security_group_id = aws_security_group.app.id
+  referenced_security_group_id = aws_security_group.alb.id
+  ip_protocol = "tcp"
+  from_port   = 443
+  to_port     = 443
+}
+
+resource "aws_vpc_security_group_egress_rule" "app_out_https" {
+  security_group_id = aws_security_group.app.id
+  cidr_ipv4   = "0.0.0.0/0"
+  ip_protocol = "tcp"
+  from_port   = 443
+  to_port     = 443
+}
+
+
 ####################
 ###### Part 3 ######
 ####################
@@ -269,23 +348,28 @@ data "aws_iam_policy_document" "app_role_trust_policy" {
   }
 }
 
-resource "aws_iam_role" "daas_app_role" {
+resource "aws_iam_role" "app_role" {
   name               = "DaaSAppRole"
   assume_role_policy = data.aws_iam_policy_document.app_role_trust_policy.json
 }
 
 resource "aws_iam_role_policy_attachment" "app_policy_attach" {
-  role       = aws_iam_role.daas_app_role.name
+  role       = aws_iam_role.app_role.name
   policy_arn = aws_iam_policy.app_policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "ssm_attach" {
-  role       = aws_iam_role.daas_app_role.name
+  role       = aws_iam_role.app_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 # 3.5 EC2 instance profile
-resource "aws_iam_instance_profile" "daas_instance_profile" {
+resource "aws_iam_instance_profile" "instance_profile" {
   name = "DaaSInstanceProfile"
-  role = aws_iam_role.daas_app_role.name
+  role = aws_iam_role.app_role.name
 }
+
+####################
+###### Part 4 ######
+####################
+
