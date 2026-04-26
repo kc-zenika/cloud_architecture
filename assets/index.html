@@ -76,15 +76,33 @@
         color: #666;
         font-style: italic;
       }
+      .instance-tag {
+        margin-top: 1.5rem;
+        font-size: 0.85rem;
+        letter-spacing: 0.05em;
+        opacity: 0.85;
+        font-weight: normal;
+      }
+      .instance-id {
+        background: #fff3cd;
+        color: #b07d00;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        border: 1px dashed #f0a500;
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <h1>Ducks As A Service</h1>
-      <h3>Stay quackin’, stay learnin’</h3>
+      <h3>🦆 Stay quackin', stay learnin' 🦆</h3>
       <img id="duck" class="duck" src="" alt="Duck" />
       <p id="fact" class="fact"></p>
       <button onclick="fetchNew()">Quack Quack?</button>
+      <br><br>
+      <h4 class="instance-tag">Quacking from <span class="instance-id">INSTANCE_ID_SED</span></h4>
     </div>
 
     <script>
