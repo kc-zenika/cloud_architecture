@@ -358,18 +358,122 @@ resource "aws_iam_role_policy_attachment" "app_policy_attach" {
   policy_arn = aws_iam_policy.app_policy.arn
 }
 
-resource "aws_iam_role_policy_attachment" "ssm_attach" {
+resource "aws_iam_role_policy_attachment" "app_ssm_attach" {
   role       = aws_iam_role.app_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 # 3.5 EC2 instance profile
-resource "aws_iam_instance_profile" "instance_profile" {
+resource "aws_iam_instance_profile" "app_instance_profile" {
   name = "DaaSInstanceProfile"
   role = aws_iam_role.app_role.name
 }
+
+# 3.6 Interface VPC endpoint for SSM
+locals {
+  ssm_services = ["ssm", "ssmmessages", "ec2messages"]
+}
+
+resource "aws_security_group" "ssm_vpce_sg" {
+  name        = "ssm-vpce"
+  description = "Allow nodes to talk to SSM Endpoints"
+  vpc_id      = aws_vpc.main.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "ssm_vpce_in_https" {
+  security_group_id = aws_security_group.ssm_vpce_sg.id
+  referenced_security_group_id = aws_security_group.app.id
+  ip_protocol = "tcp"
+  from_port   = 443
+  to_port     = 443
+}
+
+resource "aws_vpc_security_group_egress_rule" "ssm_vpce_out_https" {
+  security_group_id = aws_security_group.app.id
+  referenced_security_group_id = aws_security_group.ssm_vpce_sg.id
+  ip_protocol = "tcp"
+  from_port   = 443
+  to_port     = 443
+}
+
+resource "aws_vpc_endpoint" "ssm_endpoints" {
+  # creates 3 vpc endpoints required for ssm
+  for_each = toset(local.ssm_services)
+
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.ap-southeast-1.${each.key}"
+  vpc_endpoint_type = "Interface"
+
+  subnet_ids = [for s in aws_subnet.private : s.id]
+
+  # This allows the 'ssm.ap-southeast-1.amazonaws.com' URL 
+  # to resolve to the private endpoint IP
+  private_dns_enabled = true
+
+  security_group_ids = [aws_security_group.ssm_vpce_sg.id]
+}
+
 
 ####################
 ###### Part 4 ######
 ####################
 
+# EC2
+resource "aws_instance" "web_server" {
+  ami           = "ami-0135b39e8099fe53c"
+  instance_type = "t3.micro"
+
+  user_data = file("user_data.sh")
+  subnet_id = aws_subnet.private["ap-southeast-1a"].id
+
+  iam_instance_profile = aws_iam_instance_profile.app_instance_profile.name
+  vpc_security_group_ids = [aws_security_group.app.id]
+}
+
+# NAT
+resource "aws_eip" "nat" {
+  domain = "vpc"
+  tags = {
+    Name = "nat-eip"
+  }
+}
+
+resource "aws_nat_gateway" "main" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public["ap-southeast-1a"].id
+
+  tags = {
+    Name = "nat-main"
+  }
+
+  depends_on = [aws_internet_gateway.main]
+}
+
+# Route table in private subnets to NAT for internet outbound
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main.id
+  }
+
+  tags = { Name = "rt-private" }
+}
+
+resource "aws_route_table_association" "private" {
+  for_each       = aws_subnet.private
+  subnet_id      = each.value.id
+  route_table_id = aws_route_table.private.id
+}
+
+
+# Gateway VPCe for S3
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id       = aws_vpc.main.id
+  service_name = "com.amazonaws.ap-southeast-1.s3"
+  vpc_endpoint_type = "Gateway"
+
+  # This automatically injects the S3 route into these route tables
+  route_table_ids = [aws_route_table.private.id]
+}
