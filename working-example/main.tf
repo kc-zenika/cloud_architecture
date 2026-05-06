@@ -15,7 +15,7 @@ terraform {
 
   # backend
   backend "s3" {
-    bucket         = "workshop-tfstate-787525931078"
+    bucket         = "workshop-tfstate-211945238520"
     key            = "terraform.tfstate"
     region         = "ap-southeast-1"
     dynamodb_table = "terraform-lock"
@@ -321,8 +321,8 @@ data "aws_iam_policy_document" "app_policy" {
     ]
 
     resources = [
-      "arn:aws:s3:::daas-787525931078",
-			"arn:aws:s3:::daas-787525931078/*"
+      "arn:aws:s3:::daas-211945238520",
+			"arn:aws:s3:::daas-211945238520/*"
     ]
   }
 }
