@@ -9,7 +9,7 @@ systemctl enable nginx
 
 # 3. Pull the index.html from your S3 bucket
 # Note: This requires an IAM Instance Profile attached to the EC2
-aws s3 cp s3://daas-787525931078/index.html /usr/share/nginx/html/index.html
+aws s3 cp s3://daas-211945238520/index.html /usr/share/nginx/html/index.html
 
 # 4. Replace INSTANCE_ID_SED with actual instance ID (IMDSv2)
 TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" \
