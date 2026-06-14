@@ -1,44 +1,44 @@
 # Part 2 (4.5 hours)
 ## goals
-- encapsulate resources with terraform modules
-- how to expose traffic in public
-- how to scale up when traffic increases
+- how to be more resilient and secure when traffic increases
 - how to perform basic infra monitoring
-## flow
+- (advance) encapsulate resources with terraform modules
+
+## Newbie track
+- reinforce purely cloud only
+- revisit part 1 + more examples
+- less terraform, execute too, but no modules, just hand out
+- cloudwatch
+## Advance track
 - 30mins - recap
   - go through notes and explain the why again
   - for candidates that didnt attended part 1 too
+  - more network
+- ASG/EC2 + alb/nlb
+  - S3/EBS/EFS + KMS
 - 50mins - encapsulating into terraform modules
-- 10mins - break
-- 60mins - cloudfront
-- 60mins - ASG 
-- 30mins - cloudwatch
+- 10mins - break 
+- 60mins - cloudwatch
+  - sprinkle IAM policies to log to cloudwatch
+  - IBAC and RBAC
+
+
+
+# Part 3/4
+- ecs 
+- cross account role - can work together
+- databse - backups, logss
+- CF - s3 and vpc_orgin
+- WAF
+- s3 static file
+
 
 
 # Materials to prepare
-0. recap materials
+1. recap materials (Fion + Dax)
   - overview of part 1
-  - more detailed explainations on some topics that were missed (especially the NACL)
-1. terraform modules
-  - explain how modules work (inputs, outputs, encapsulation)
-  - extract subnets as a module
-  - extract app as a module (EC2, ALB, target group)
-  - will prepare the rest as examples, can be mixture of modules + raw
-  - reprovision everything again
-2. exposing public with cloudfront
-  - topics
-    - edge performance - latency reduction, caching at edge
-    - perimeter & origin security
-    - a little bit of WAF and shield
-    - r53 hosted zone and alias (explain why skip in workshop - needs custom domain)
-    - use *.cloudfront.net" for the workshop
-  - terraform
-    - create a cloudfront dis
-    - cloudfront -> ALB (internet)
-    - verify `*.cloudfront.net` URL and some nslookup commands
-    - switch alb to internal and create vpc-origin
-    - cloudfront -> ALB (internal)
-3. handling scaling
+  - more detailed explainations on some topics that were missed (especially the NaCl)
+2. handling scaling (Sujie)
   - topics
     - HA (multi-AZ failover) vs performance scaling ( capacity under load)
     - self healing (how ASG detects and replaces unhealthy instances) - healthcheck
@@ -51,7 +51,13 @@
     - point ALB to ASG
     - setup scaling policies and targets
     - demo: terminate one instance manually → watch self-healing
-4. cloudwatch
+3. terraform modules (kc)
+  - explain how modules work (inputs, outputs, encapsulation)
+  - extract subnets as a module
+  - extract app as a module (EC2, ALB, target group)
+  - will prepare the rest as examples, can be mixture of modules + raw
+  - reprovision everything again
+4. cloudwatch (kc)
   - topics
     - LGTM - logs, traces, metrics 
       - traces not covered in workshop
@@ -66,12 +72,10 @@
 
 
 # To discuss
-- workshop goals, flow and topics ok?
 - format
-  - 2 rooms (we should try)
-    - 1 by fion, 1 by sujie
-  - 1 big room outside again
+  - big room outside (advance)
+  - meeting room (newbie)
 - how to delegate work
-- workshop dates
+- workshop dates (24 july) 
 
 
