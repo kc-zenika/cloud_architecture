@@ -1,6 +1,7 @@
 # Part 2 (4.5 hours)
 ## goals
-- how to be more resilient and secure when traffic increases
+- be comfortable with topics covered in part 1
+- how scale when traffic increases
 - how to perform basic infra monitoring
 - (advance) encapsulate resources with terraform modules
 
@@ -21,17 +22,6 @@
 - 60mins - cloudwatch
   - sprinkle IAM policies to log to cloudwatch
   - IBAC and RBAC
-
-
-
-# Part 3/4
-- ecs 
-- cross account role - can work together
-- databse - backups, logss
-- CF - s3 and vpc_orgin
-- WAF
-- s3 static file
-
 
 
 # Materials to prepare
@@ -79,3 +69,11 @@
 - workshop dates (24 july) 
 
 
+
+# Part 3/4
+- ecs 
+- cross account role - can work together
+- databse - backups, logss
+- CF - s3 and vpc_orgin
+- WAF
+- s3 static file
