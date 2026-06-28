@@ -1,0 +1,26 @@
+terraform {
+  required_version = ">= 1.11"
+
+  # aws provider
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.38"
+    }
+  }
+
+  # backend
+  backend "s3" {
+    bucket       = "workshop-tfstate-<ACCOUNT_ID>"
+    key          = "terraform.tfstate"
+    region       = "ap-southeast-1"
+    use_lockfile = true # makes the S3 backend do locking without DynamoDB
+    encrypt      = true
+  }
+}
+
+# Backend blocks can't reference locals, so <ACCOUNT_ID> above still
+# has to be filled in by hand -- everything else derives the account ID here.
+locals {
+  account_id  = "<ACCOUNT_ID>"
+}
