@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VPC NACL Walkthrough</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+  }
+
+  h1 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .tab {
+    padding: 8px 20px;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .tab:hover { border-color: #60a5fa; color: #e2e8f0; }
+  .tab.active { background: #1d4ed8; border-color: #3b82f6; color: #fff; }
+
+  /* Diagram */
+  .diagram-wrap {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  svg { display: block; }
+
+  /* Node labels */
+  .node-label {
+    font-size: 11px;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    fill: #cbd5e1;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+  }
+
+  .node-sublabel {
+    font-size: 9px;
+    fill: #64748b;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+  }
+
+  /* VPC wrapper */
+  .vpc-wrap { fill: rgba(249,115,22,0.04); stroke: #f9d316; stroke-width: 1.5; stroke-dasharray: 6,3; }
+
+  /* Subnet background rects */
+  .subnet-public { fill: rgba(59,130,246,0.08); stroke: #334155; stroke-width: 1; rx: 8; }
+  .subnet-private { fill: rgba(34,197,94,0.06); stroke: #334155; stroke-width: 1; }
+
+  /* Edges */
+  .edge {
+    stroke: #334155;
+    stroke-width: 2;
+    transition: stroke 0.4s, stroke-width 0.4s;
+  }
+  .edge.active { stroke: #3b82f6; stroke-width: 2.5; }
+  .edge.used { stroke: #1d4ed8; stroke-width: 1.5; }
+
+  /* Node circles */
+  .node-circle {
+    fill: #1e293b;
+    stroke: #475569;
+    stroke-width: 2;
+    transition: fill 0.3s, stroke 0.3s;
+  }
+  .node-circle.active { fill: #1d4ed8; stroke: #60a5fa; }
+
+  /* NACL shield nodes */
+  .nacl-shape {
+    fill: #1e293b;
+    stroke: #475569;
+    stroke-width: 2;
+    transition: fill 0.3s, stroke 0.3s;
+  }
+  .nacl-shape.active { fill: #7c3aed; stroke: #a78bfa; }
+
+  /* Packet dot */
+  #packet {
+    fill: #fbbf24;
+    filter: drop-shadow(0 0 6px #fbbf24);
+    transition: cx 0.55s cubic-bezier(0.4,0,0.2,1),
+                cy 0.55s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* Step label */
+  .step-label {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    color: #cbd5e1;
+    text-align: center;
+    margin-bottom: 16px;
+    max-width: 660px;
+    line-height: 1.5;
+    min-height: 52px;
+  }
+
+  /* NACL grid - always visible */
+  .nacl-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 16px;
+  }
+
+  .nacl-col-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #a78bfa;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .nacl-section {
+    background: #0f172a;
+    border: 1px solid #334155; 
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .nacl-section.active-section {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 1px rgba(124,58,237,0.25);
+  }
+
+  .nacl-dir-title { margin-bottom: 8px; }
+
+  .nacl-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+  }
+
+  .nacl-table th {
+    text-align: left;
+    padding: 4px 6px;
+    color: #64748b;
+    font-weight: 600;
+    border-bottom: 1px solid #1e293b;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .nacl-table td {
+    padding: 5px 6px;
+    color: #94a3b8;
+    border-bottom: 1px solid #1e293b;
+  }
+
+  .nacl-table tr.highlight td {
+    background: rgba(34, 197, 94, 0.12);
+    color: #e2e8f0;
+    font-weight: 600;
+  }
+
+  .nacl-table tr.highlight td:last-child { color: #4ade80; }
+
+  .badge-allow {
+    background: rgba(34,197,94,0.15);
+    color: #4ade80;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  .badge-deny {
+    background: rgba(239,68,68,0.15);
+    color: #f87171;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .btn {
+    padding: 8px 24px;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: #e2e8f0;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .btn:hover:not(:disabled) { border-color: #60a5fa; background: #263348; }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .step-counter {
+    font-size: 0.85rem;
+    color: #64748b;
+    min-width: 80px;
+    text-align: center;
+  }
+
+  .direction-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .in-badge { background: rgba(59,130,246,0.2); color: #60a5fa; }
+  .out-badge { background: rgba(251,191,36,0.2); color: #fbbf24; }
+</style>
+</head>
+<body>
+
+<h1>VPC NACL Walkthrough</h1>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchFlow(0)">Flow 1: User → App</button>
+  <button class="tab" onclick="switchFlow(1)">Flow 2: App → Repos</button>
+</div>
+
+<div class="diagram-wrap">
+  <svg id="svg" width="700" height="490" viewBox="0 0 700 500">
+  <g transform="translate(0, -10)">
+
+    <!-- VPC boundary (everything except Internet is inside) -->
+    <rect x="60" y="85" width="580" height="410" rx="10" class="vpc-wrap"/>
+    <text x="76" y="107" font-size="10" fill="#f9d316" font-family="system-ui" font-weight="600" opacity="0.7">vpc-main — 10.0.0.0/16</text>
+
+    <!-- Subnet backgrounds -->
+    <rect x="80" y="240" width="540" height="110" rx="8" class="subnet-public"/>
+    <text x="96" y="258" font-size="10" fill="#3b82f6" font-family="system-ui" font-weight="600" opacity="0.7">PUBLIC SUBNET</text>
+
+    <rect x="80" y="415" width="540" height="65" rx="8" class="subnet-private"/>
+    <text x="96" y="433" font-size="10" fill="#22c55e" font-family="system-ui" font-weight="600" opacity="0.7">PRIVATE SUBNET</text>
+
+    <!-- Edges (drawn before nodes so nodes appear on top) -->
+    <line id="edge-internet-igw"       x1="350" y1="60"  x2="350" y2="100" class="edge"/>
+    <line id="edge-igw-naclpub"        x1="350" y1="130" x2="350" y2="180" class="edge"/>
+    <line id="edge-naclpub-alb"        x1="330" y1="210" x2="230" y2="265" class="edge"/>
+    <line id="edge-naclpub-nat"        x1="370" y1="210" x2="470" y2="265" class="edge"/>
+    <line id="edge-alb-naclpriv"       x1="240" y1="315" x2="330" y2="360" class="edge"/>
+    <line id="edge-nat-naclpriv"       x1="460" y1="315" x2="370" y2="360" class="edge"/>
+    <line id="edge-naclpriv-app"       x1="350" y1="390" x2="350" y2="430" class="edge"/>
+
+    <!-- Internet node -->
+    <circle id="node-internet" cx="350" cy="40" r="22" class="node-circle"/>
+    <text x="350" y="37" class="node-label">Internet</text>
+    <text x="350" y="49" class="node-sublabel">User / Repos</text>
+
+    <!-- IGW node -->
+    <circle id="node-igw" cx="350" cy="115" r="20" class="node-circle"/>
+    <text x="350" y="112" class="node-label">IGW</text>
+    <text x="350" y="123" class="node-sublabel">igw-main</text>
+
+    <!-- nacl-public shield -->
+    <polygon id="node-naclpub"
+      points="350,177 370,190 370,210 350,220 330,210 330,190"
+      class="nacl-shape"/>
+    <text x="350" y="198" class="node-label" font-size="9">nacl-public</text>
+
+    <!-- ALB node -->
+    <circle id="node-alb" cx="230" cy="290" r="26" class="node-circle"/>
+    <text x="230" y="287" class="node-label">ALB</text>
+    <text x="230" y="298" class="node-sublabel">sg-alb</text>
+
+    <!-- NAT GW node -->
+    <circle id="node-nat" cx="470" cy="290" r="26" class="node-circle"/>
+    <text x="470" y="287" class="node-label">NAT GW</text>
+
+    <!-- nacl-private shield -->
+    <polygon id="node-naclpriv"
+      points="350,357 370,370 370,390 350,400 330,390 330,370"
+      class="nacl-shape"/>
+    <text x="350" y="378" class="node-label" font-size="9">nacl-private</text>
+
+    <!-- App node -->
+    <circle id="node-app" cx="350" cy="450" r="22" class="node-circle"/>
+    <text x="350" y="447" class="node-label">App</text>
+    <text x="350" y="458" class="node-sublabel">EC2</text>
+
+    <!-- Packet dot (rendered last so it's always on top) -->
+    <circle id="packet" cx="350" cy="40" r="8"/>
+
+  </g>
+  </svg>
+</div>
+
+<!-- Step description -->
+<div id="step-label" class="step-label"></div>
+
+<!-- NACL tables - always visible, highlight toggled by JS -->
+<div class="nacl-grid">
+
+  <!-- nacl-public -->
+  <div>
+    <div class="nacl-col-title">nacl-public</div>
+
+    <div class="nacl-section" id="sect-nacl-public-INBOUND">
+      <div class="nacl-dir-title"><span class="direction-badge in-badge">INBOUND</span></div>
+      <table class="nacl-table">
+        <thead><tr><th>#</th><th>Proto</th><th>Port</th><th>Source</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr id="row-nacl-public-INBOUND-100"><td>100</td><td>TCP</td><td>80</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-public-INBOUND-110"><td>110</td><td>TCP</td><td>443</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-public-INBOUND-120"><td>120</td><td>TCP</td><td>1024-65535</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-public-INBOUND-star"><td>*</td><td>All</td><td>All</td><td>0.0.0.0/0</td><td><span class="badge-deny">DENY</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="nacl-section" id="sect-nacl-public-OUTBOUND">
+      <div class="nacl-dir-title"><span class="direction-badge out-badge">OUTBOUND</span></div>
+      <table class="nacl-table">
+        <thead><tr><th>#</th><th>Proto</th><th>Port</th><th>Dest</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr id="row-nacl-public-OUTBOUND-100"><td>100</td><td>TCP</td><td>80</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-public-OUTBOUND-110"><td>110</td><td>TCP</td><td>443</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-public-OUTBOUND-120"><td>120</td><td>TCP</td><td>1024-65535</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-public-OUTBOUND-star"><td>*</td><td>All</td><td>All</td><td>0.0.0.0/0</td><td><span class="badge-deny">DENY</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- nacl-private -->
+  <div>
+    <div class="nacl-col-title">nacl-private</div>
+
+    <div class="nacl-section" id="sect-nacl-private-INBOUND">
+      <div class="nacl-dir-title"><span class="direction-badge in-badge">INBOUND</span></div>
+      <table class="nacl-table">
+        <thead><tr><th>#</th><th>Proto</th><th>Port</th><th>Source</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr id="row-nacl-private-INBOUND-100"><td>100</td><td>TCP</td><td>80</td><td>10.0.0.0/16</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-private-INBOUND-110"><td>110</td><td>TCP</td><td>443</td><td>10.0.0.0/16</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-private-INBOUND-120"><td>120</td><td>TCP</td><td>1024-65535</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-private-INBOUND-star"><td>*</td><td>All</td><td>All</td><td>0.0.0.0/0</td><td><span class="badge-deny">DENY</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="nacl-section" id="sect-nacl-private-OUTBOUND">
+      <div class="nacl-dir-title"><span class="direction-badge out-badge">OUTBOUND</span></div>
+      <table class="nacl-table">
+        <thead><tr><th>#</th><th>Proto</th><th>Port</th><th>Dest</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr id="row-nacl-private-OUTBOUND-110"><td>110</td><td>TCP</td><td>443</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-private-OUTBOUND-120"><td>120</td><td>TCP</td><td>1024-65535</td><td>10.0.0.0/16</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-private-OUTBOUND-star"><td>*</td><td>All</td><td>All</td><td>0.0.0.0/0</td><td><span class="badge-deny">DENY</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <button class="btn" id="btn-prev" onclick="advance(-1)">◀ Prev</button>
+  <span class="step-counter" id="step-counter"></span>
+  <button class="btn" id="btn-next" onclick="advance(1)">Next ▶</button>
+</div>
+
+<script>
+// ─── Node centre coordinates ───────────────────────────────────────────────
+const NODES = {
+  internet:  { cx: 350, cy: 40  },
+  igw:       { cx: 350, cy: 115 },
+  naclpub:   { cx: 350, cy: 198 },
+  alb:       { cx: 230, cy: 290 },
+  nat:       { cx: 470, cy: 290 },
+  naclpriv:  { cx: 350, cy: 378 },
+  app:       { cx: 350, cy: 450 },
+};
+
+// ─── Flow step definitions ─────────────────────────────────────────────────
+const FLOWS = [
+  // Flow 1: User → App (request + response)
+  [
+    { label: 'Client initiates an HTTPS request (port 443) to the app.',
+      packetAt: 'internet', naclTable: null },
+
+    { label: 'Packet enters the VPC through the Internet Gateway (igw-main).',
+      packetAt: 'igw', naclTable: null },
+
+    { label: 'nacl-public evaluates the inbound packet. Rule 110 matches: TCP 443 from 0.0.0.0/0 → ALLOW.',
+      packetAt: 'naclpub',
+      naclTable: { key: 'nacl-public-INBOUND', title: 'nacl-public', direction: 'INBOUND', highlight: 110 } },
+
+    { label: 'Packet enters the public subnet and reaches the ALB.',
+      packetAt: 'alb', naclTable: null },
+
+    { label: 'ALB forwards request into the private subnet. nacl-private evaluates inbound. Rule 110 matches: TCP 443 from 10.0.0.0/16 → ALLOW.',
+      packetAt: 'naclpriv',
+      naclTable: { key: 'nacl-private-INBOUND', title: 'nacl-private', direction: 'INBOUND', highlight: 110 } },
+
+    { label: 'Request reaches the App. It processes the request and prepares a response.',
+      packetAt: 'app', naclTable: null },
+
+    { label: 'App sends the response back on an ephemeral port (1024-65535). nacl-private evaluates outbound. Rule 120 matches: TCP 1024-65535 to 10.0.0.0/16 → ALLOW.',
+      packetAt: 'naclpriv',
+      naclTable: { key: 'nacl-private-OUTBOUND', title: 'nacl-private', direction: 'OUTBOUND', highlight: 120 } },
+
+    { label: 'Response returns to the ALB in the public subnet.',
+      packetAt: 'alb', naclTable: null },
+
+    { label: 'ALB sends response to client. nacl-public evaluates outbound. Rule 120 matches: TCP 1024-65535 to 0.0.0.0/0 → ALLOW.',
+      packetAt: 'naclpub',
+      naclTable: { key: 'nacl-public-OUTBOUND', title: 'nacl-public', direction: 'OUTBOUND', highlight: 120 } },
+
+    { label: 'Response exits the VPC via IGW and reaches the client. ✓ Round trip complete.',
+      packetAt: 'internet', naclTable: null },
+  ],
+
+  // Flow 2: App → NAT → Internet (outbound + return)
+  [
+    { label: 'App makes an outbound HTTPS request — e.g. fetching a package from a repo (port 443).',
+      packetAt: 'app', naclTable: null },
+
+    { label: 'Packet crosses into the public subnet. nacl-private evaluates outbound. Rule 110 matches: TCP 443 to 0.0.0.0/0 → ALLOW.',
+      packetAt: 'naclpriv',
+      naclTable: { key: 'nacl-private-OUTBOUND', title: 'nacl-private', direction: 'OUTBOUND', highlight: 110 } },
+
+    { label: 'Packet reaches the NAT Gateway in the public subnet. NAT translates the source IP.',
+      packetAt: 'nat', naclTable: null },
+
+    { label: 'NAT sends packet outbound. nacl-public evaluates outbound. Rule 110 matches: TCP 443 to 0.0.0.0/0 → ALLOW.',
+      packetAt: 'naclpub',
+      naclTable: { key: 'nacl-public-OUTBOUND', title: 'nacl-public', direction: 'OUTBOUND', highlight: 110 } },
+
+    { label: 'Packet exits the VPC via IGW and reaches the remote repo on the internet.',
+      packetAt: 'internet', naclTable: null },
+
+    { label: 'Repo sends the response back on an ephemeral port. nacl-public evaluates inbound. Rule 120 matches: TCP 1024-65535 from 0.0.0.0/0 → ALLOW. (This is why the source must be 0.0.0.0/0 — the response originates from the internet, not the VPC.)',
+      packetAt: 'naclpub',
+      naclTable: { key: 'nacl-public-INBOUND', title: 'nacl-public', direction: 'INBOUND', highlight: 120 } },
+
+    { label: 'Response arrives at the NAT Gateway, which translates the destination back to the App\'s private IP.',
+      packetAt: 'nat', naclTable: null },
+
+    { label: 'NAT forwards response into the private subnet. nacl-private evaluates inbound. Rule 120 matches: TCP 1024-65535 from 0.0.0.0/0 → ALLOW. (Source must be 0.0.0.0/0 because NAT still presents the internet IP to the NACL.)',
+      packetAt: 'naclpriv',
+      naclTable: { key: 'nacl-private-INBOUND', title: 'nacl-private', direction: 'INBOUND', highlight: 120 } },
+
+    { label: 'Response reaches the App. ✓ Outbound round trip complete.',
+      packetAt: 'app', naclTable: null },
+  ],
+];
+
+// ─── Edge map: which edge IDs connect which node pairs ────────────────────
+const EDGE_MAP = {
+  'internet-igw':    ['internet','igw'],
+  'igw-naclpub':     ['igw','naclpub'],
+  'naclpub-alb':     ['naclpub','alb'],
+  'naclpub-nat':     ['naclpub','nat'],
+  'alb-naclpriv':    ['alb','naclpriv'],
+  'nat-naclpriv':    ['nat','naclpriv'],
+  'naclpriv-app':    ['naclpriv','app'],
+};
+
+// ─── State ─────────────────────────────────────────────────────────────────
+let currentFlow = 0;
+let currentStep = 0;
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+function edgeKey(a, b) {
+  // canonical order matches EDGE_MAP keys
+  const pairs = [
+    ['internet','igw'], ['igw','naclpub'],
+    ['naclpub','alb'],  ['naclpub','nat'],
+    ['alb','naclpriv'], ['nat','naclpriv'],
+    ['naclpriv','app'],
+  ];
+  for (const [x, y] of pairs) {
+    if ((a===x && b===y) || (a===y && b===x)) return `edge-${x}-${y}`;
+  }
+  return null;
+}
+
+function render() {
+  const steps = FLOWS[currentFlow];
+  const step  = steps[currentStep];
+
+  // Move packet
+  const pos = NODES[step.packetAt];
+  const pkt = document.getElementById('packet');
+  pkt.setAttribute('cx', pos.cx);
+  pkt.setAttribute('cy', pos.cy);
+
+  // Reset edge + node highlights
+  document.querySelectorAll('.edge').forEach(e => e.classList.remove('active', 'used'));
+  document.querySelectorAll('.node-circle, .nacl-shape').forEach(n => n.classList.remove('active'));
+
+  // Highlight traversed edges
+  for (let i = 1; i <= currentStep; i++) {
+    const from = steps[i-1].packetAt;
+    const to   = steps[i].packetAt;
+    const id   = edgeKey(from, to);
+    if (id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add(i === currentStep ? 'active' : 'used');
+    }
+  }
+
+  // Highlight current node
+  const nodeEl = document.getElementById(`node-${step.packetAt}`);
+  if (nodeEl) nodeEl.classList.add('active');
+
+  // Step label
+  document.getElementById('step-label').textContent = step.label;
+
+  // NACL highlights — accumulate all matched rows up to current step
+  document.querySelectorAll('.nacl-table tr').forEach(r => r.classList.remove('highlight'));
+  document.querySelectorAll('.nacl-section').forEach(s => s.classList.remove('active-section'));
+  for (let i = 0; i <= currentStep; i++) {
+    const t = steps[i].naclTable;
+    if (t) document.getElementById(`row-${t.key}-${t.highlight}`)?.classList.add('highlight');
+  }
+  if (step.naclTable) {
+    document.getElementById(`sect-${step.naclTable.key}`)?.classList.add('active-section');
+  }
+
+  // Step counter + button states
+  document.getElementById('step-counter').textContent = `${currentStep + 1} / ${steps.length}`;
+  document.getElementById('btn-prev').disabled = currentStep === 0;
+  document.getElementById('btn-next').disabled = currentStep === steps.length - 1;
+}
+
+function advance(delta) {
+  const steps = FLOWS[currentFlow];
+  currentStep = Math.max(0, Math.min(steps.length - 1, currentStep + delta));
+  render();
+}
+
+function switchFlow(idx) {
+  currentFlow = idx;
+  currentStep = 0;
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  render();
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') advance(1);
+  if (e.key === 'ArrowLeft')  advance(-1);
+});
+
+// Init
+render();
+</script>
+</body>
+</html>
