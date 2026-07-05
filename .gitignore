@@ -2,3 +2,4 @@
 *.tfstate
 **.tfstate**
 example.txt
+.DS_Store

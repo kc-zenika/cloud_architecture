@@ -1,0 +1,75 @@
+<mxfile host="65bd71144e">
+    <diagram id="architecture-local" name="Local scale">
+        <mxGraphModel dx="493" dy="1124" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1488" pageHeight="910" background="#0f1729" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Local scale — &lt;b&gt;1–10 users&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontColor=#ffffff;fontSize=24;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="35" width="400" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="panel" value="" style="rounded=1;arcSize=6;fillColor=#1a2138;strokeColor=#2a3350;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="98" y="92" width="1290" height="632" as="geometry"/>
+                </mxCell>
+                <mxCell id="user" value="&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;User&lt;br&gt;&lt;/font&gt;&lt;span style=&quot;font-size:11px&quot;&gt;&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;browser&lt;/font&gt;&lt;/span&gt;&lt;/font&gt;" style="rounded=1;arcSize=12;fillColor=#2b4bcc;strokeColor=#5b7bff;fontColor=#ffffff;html=1;fontSize=14;" parent="1" vertex="1">
+                    <mxGeometry x="110" y="360" width="112" height="85" as="geometry"/>
+                </mxCell>
+                <mxCell id="appserver" value="Application Server" style="rounded=1;arcSize=4;fillColor=#14562f;strokeColor=#3ddc84;fontColor=#3ddc84;fontStyle=1;fontSize=16;verticalAlign=top;align=center;html=1;spacingTop=8;" parent="1" vertex="1">
+                    <mxGeometry x="248" y="135" width="1128" height="545" as="geometry"/>
+                </mxCell>
+                <mxCell id="upload" value="Upload" style="rounded=1;arcSize=10;fillColor=#1c6b3f;strokeColor=#3ddc84;fontColor=#ffffff;fontSize=16;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="278" y="210" width="212" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="download" value="Download" style="rounded=1;arcSize=10;fillColor=#1c6b3f;strokeColor=#3ddc84;fontColor=#ffffff;fontSize=16;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="278" y="343" width="212" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="search" value="Search" style="rounded=1;arcSize=10;fillColor=#1c6b3f;strokeColor=#3ddc84;fontColor=#ffffff;fontSize=16;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="278" y="477" width="212" height="75" as="geometry"/>
+                </mxCell>
+                <mxCell id="storage" value="&lt;b&gt;&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;Storage&lt;/font&gt;&lt;/b&gt;" style="rounded=1;arcSize=10;fillColor=#173d24;strokeColor=#E8873A;fontColor=#ffffff;fontSize=16;html=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="543" y="267" width="210" height="71" as="geometry"/>
+                </mxCell>
+                <mxCell id="metadata" value="&lt;b&gt;&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;Metadata&lt;/font&gt;&lt;/b&gt;" style="rounded=1;arcSize=10;fillColor=#173d24;strokeColor=#3ddc84;fontColor=#ffffff;fontSize=16;html=1;strokeWidth=2;" parent="1" vertex="1">
+                    <mxGeometry x="543" y="468" width="210" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="disk" value="Local Disk" style="rounded=1;arcSize=4;fillColor=#7a2410;strokeColor=#e8873a;fontColor=#ffffff;fontStyle=1;fontSize=18;verticalAlign=top;align=center;html=1;spacingTop=10;" parent="1" vertex="1">
+                    <mxGeometry x="858" y="180" width="497" height="480" as="geometry"/>
+                </mxCell>
+                <mxCell id="images" value="&lt;font&gt;&lt;b style=&quot;&quot;&gt;&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;/&lt;/font&gt;&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;images&lt;/font&gt;&lt;br&gt;&lt;/b&gt;&lt;/font&gt;&amp;nbsp;&lt;br&gt;d82431...6075a.jpg&lt;br&gt;3c7215...b3c5e.jpg&lt;br&gt;..." style="rounded=1;arcSize=8;fillColor=#8a2d12;strokeColor=#e8873a;fontColor=#f6d9cc;fontSize=14;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="888" y="257" width="435" height="176" as="geometry"/>
+                </mxCell>
+                <mxCell id="meta" value="&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;&lt;font style=&quot;font-weight: bold; color: rgb(255, 255, 255);&quot;&gt;/metadata&lt;br&gt;&lt;/font&gt;&lt;br&gt;{ id, tags, size,&lt;br&gt;upload_time ... }&lt;br&gt;...&lt;/font&gt;" style="rounded=1;arcSize=8;fillColor=#8a2d12;strokeColor=#e8873a;fontColor=#f6d9cc;fontSize=14;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="888" y="457" width="435" height="178" as="geometry"/>
+                </mxCell>
+                <mxCell id="caption" value="Simple monolith — a single server that handles everything." style="text;html=1;align=center;verticalAlign=middle;fontColor=#ffffff;fontSize=15;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="688" width="686" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_user" style="edgeStyle=none;curved=1;html=1;strokeColor=#8a94a6;strokeWidth=2;endArrow=classic;" parent="1" source="user" target="appserver" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_up_st" style="edgeStyle=none;curved=1;html=1;strokeColor=#e8873a;strokeWidth=2;endArrow=classic;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" parent="1" source="upload" target="storage" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_dl_st" style="edgeStyle=none;curved=1;html=1;strokeColor=#e8873a;strokeWidth=2;endArrow=classic;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="download" target="storage" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_se_st" style="edgeStyle=none;curved=1;html=1;strokeColor=#e8873a;strokeWidth=2;endArrow=classic;exitX=1;exitY=0;exitDx=0;exitDy=0;" parent="1" source="search" target="storage" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="431" y="477" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_up_md" style="edgeStyle=none;curved=1;html=1;strokeColor=#3ddc84;strokeWidth=2;endArrow=classic;exitX=1;exitY=1;exitDx=0;exitDy=0;" parent="1" source="upload" target="metadata" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_se_md" style="edgeStyle=none;curved=1;html=1;strokeColor=#3ddc84;strokeWidth=2;endArrow=classic;" parent="1" source="search" target="metadata" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_st_img" style="edgeStyle=none;curved=1;html=1;strokeColor=#e8873a;strokeWidth=2;endArrow=classic;" parent="1" source="storage" target="images" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_md_meta" style="edgeStyle=none;curved=1;html=1;strokeColor=#3ddc84;strokeWidth=2;endArrow=classic;" parent="1" source="metadata" target="meta" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
