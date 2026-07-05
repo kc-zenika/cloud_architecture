@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infrastructure &amp; Scaling Walkthrough</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 40px;
+  }
+
+  h1 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  /* Stage rail */
+  .stages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 22px;
+    justify-content: center;
+  }
+  .stage-chip {
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .stage-chip:hover { border-color: #60a5fa; color: #e2e8f0; }
+  .stage-chip.active { background: #1d4ed8; border-color: #3b82f6; color: #fff; }
+
+  /* Deck */
+  .deck { width: 100%; max-width: 1000px; }
+
+  .stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+  .stage.full { grid-template-columns: 1fr; }
+  .stage.full .diagram-wrap { display: none; }
+
+  .diagram-wrap {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 14px;
+    display: grid;
+    height: 560px;
+    align-self: start;
+    overflow: hidden;
+  }
+  svg { display: block; width: 100%; height: 100%; }
+
+  /* Content panel */
+  .panel {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .full .panel { max-width: 760px; margin: 0 auto; width: 100%; }
+
+  /* Scale-intro (framing question) panel — blue */
+  .panel.intro {
+    justify-content: center;
+    border-color: rgba(59,130,246,0.4);
+    background: #0b1220;
+  }
+  .panel.intro .kicker { color: #60a5fa; }
+  .panel.intro h2 { font-size: 1.6rem; line-height: 1.22; }
+
+  /* Problem question panel — amber */
+  .panel.q {
+    justify-content: center;
+    border-color: rgba(251,191,36,0.4);
+    background: #14120b;
+  }
+  .panel.q .kicker { color: #fbbf24; }
+  .panel.q h2 { font-size: 1.7rem; line-height: 1.2; }
+
+  .kicker {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #60a5fa;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .panel h2 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    line-height: 1.25;
+    margin-bottom: 6px;
+  }
+  .panel .sub {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 14px;
+  }
+  .points { list-style: none; margin-top: 4px; }
+  .points li {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: #cbd5e1;
+    padding: 5px 0 5px 20px;
+    position: relative;
+  }
+  .points li::before {
+    content: "";
+    position: absolute;
+    left: 4px; top: 12px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #475569;
+  }
+  .panel.intro .points li::before { background: #2563eb; }
+  .panel.q .points li::before { background: #b45309; }
+  .points li b { color: #e2e8f0; }
+  .points li .hi { color: #60a5fa; font-weight: 600; }
+  .points li .hi-p { color: #a78bfa; font-weight: 600; }
+
+  /* Comparison / callout blocks */
+  .compare {
+    margin-top: 14px;
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.78rem;
+  }
+  .compare th {
+    text-align: left; padding: 6px 8px;
+    color: #94a3b8; font-weight: 700;
+    border-bottom: 1px solid #334155;
+    text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.04em;
+  }
+  .compare td {
+    padding: 6px 8px; color: #94a3b8;
+    border-bottom: 1px solid #1e293b; vertical-align: top;
+  }
+  .compare td b { color: #cbd5e1; }
+
+  .callout {
+    margin-top: 14px;
+    display: grid;
+    gap: 8px;
+  }
+  .card {
+    background: #111a2e;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: #cbd5e1;
+  }
+  .card .tag {
+    display: inline-block;
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em;
+    padding: 1px 7px; border-radius: 4px; margin-right: 6px;
+    text-transform: uppercase;
+  }
+  .tag-warn { background: rgba(251,191,36,0.15); color: #fbbf24; }
+  .tag-ok   { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .tag-tr   { background: rgba(148,163,184,0.15); color: #cbd5e1; }
+
+  /* SVG node/edge visibility system */
+  .node, .edge, .edge-label { opacity: 0; transition: opacity 0.5s ease; }
+  .node.vis, .edge.vis, .edge-label.vis { opacity: 1; }
+
+  .box { fill: #1e293b; stroke: #475569; stroke-width: 1.6; }
+  .n-label { font-size: 11px; fill: #e2e8f0; text-anchor: middle; dominant-baseline: central; font-weight: 600; pointer-events: none; }
+  .n-sub   { font-size: 8.5px; fill: #64748b; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+
+  .cat-net .box     { stroke: #3b82f6; }
+  .cat-compute .box { stroke: #60a5fa; }
+  .cat-data .box    { stroke: #a78bfa; }
+
+  .zone { fill: rgba(148,163,184,0.03); stroke: #475569; stroke-width: 1.2; stroke-dasharray: 5,3; }
+  .zone-region { fill: rgba(59,130,246,0.04); stroke: #3b82f6; stroke-dasharray: 6,4; }
+  .zone-shadow { fill: rgba(148,163,184,0.02); }
+  .zone-label { font-size: 8.5px; fill: #64748b; font-weight: 600; letter-spacing: 0.04em; }
+  .zone-region .zone-label { fill: #60a5fa; }
+
+  .edge { stroke: #334155; stroke-width: 1.8; fill: none; }
+  .edge.dashed { stroke-dasharray: 4,3; }
+  .edge-label { font-size: 8px; fill: #94a3b8; text-anchor: middle; }
+
+  /* "just added" glow */
+  .node.new .box { stroke: #fbbf24; filter: drop-shadow(0 0 5px rgba(251,191,36,0.55)); }
+  .edge.new { stroke: #fbbf24; stroke-width: 2.2; }
+
+  /* "this is the problem" highlight (on question slides) */
+  .node.problem .box,
+  .node.problem .zone { stroke: #f87171 !important; filter: drop-shadow(0 0 6px rgba(248,113,113,0.6)); }
+  .node.problem .n-label { fill: #fecaca; }
+
+  /* Controls */
+  .controls {
+    display: flex; align-items: center; gap: 16px;
+    margin-top: 22px; justify-content: center;
+  }
+  .btn {
+    padding: 8px 24px; border-radius: 6px;
+    border: 1px solid #334155; background: #1e293b; color: #e2e8f0;
+    cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s;
+  }
+  .btn:hover:not(:disabled) { border-color: #60a5fa; background: #263348; }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .step-counter { font-size: 0.85rem; color: #64748b; min-width: 90px; text-align: center; }
+
+  @media (max-width: 780px) {
+    .stage { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Infrastructure &amp; Scaling — a planet-scale image server</h1>
+
+<div class="stages" id="stages"></div>
+
+<div class="deck">
+  <div class="stage" id="stage">
+
+    <div class="diagram-wrap">
+      <svg id="svg" viewBox="205 8 270 468" preserveAspectRatio="xMidYMid meet">
+
+        <!-- ===================== ZONES (drawn first) ===================== -->
+        <g class="node zone-grp" data-since="13">
+          <rect class="zone zone-region" x="205" y="176" width="250" height="300" rx="10"/>
+          <text class="zone-label" x="215" y="192">REGION A · us-east-1</text>
+        </g>
+        <g class="node zone-grp" data-since="13">
+          <rect class="zone zone-region" x="560" y="176" width="250" height="300" rx="10"/>
+          <text class="zone-label" x="570" y="192">REGION B · us-west-2</text>
+        </g>
+
+        <!-- AZ shadow (behind) -->
+        <g class="node" data-since="8">
+          <rect class="zone zone-shadow" x="237" y="212" width="188" height="118" rx="8"/>
+          <text class="zone-label" x="405" y="324" text-anchor="end">AZ-b (replica)</text>
+        </g>
+        <g class="node" id="aza-group" data-since="6">
+          <rect class="zone" x="225" y="200" width="188" height="118" rx="8"/>
+          <text class="zone-label" x="233" y="214">AZ-a</text>
+        </g>
+
+        <!-- ===================== EDGES ===================== -->
+        <line class="edge" data-since="2" data-until="7" x1="320" y1="56"  x2="320" y2="200"/>
+        <line class="edge" data-since="8" data-until="12" x1="320" y1="56"  x2="320" y2="128"/>
+        <line class="edge" data-since="13" x1="320" y1="56"  x2="320" y2="76"/>
+        <line class="edge" data-since="13" x1="320" y1="106" x2="320" y2="128"/>
+        <line class="edge" data-since="8" x1="320" y1="160" x2="320" y2="200"/>
+        <line class="edge" data-since="2" x1="342" y1="302" x2="392" y2="406"/>
+        <line class="edge" data-since="4" x1="300" y1="302" x2="282" y2="406"/>
+        <line class="edge" data-since="15" x1="320" y1="302" x2="320" y2="356"/>
+        <line class="edge" data-since="15" x1="352" y1="386" x2="388" y2="406"/>
+        <line class="edge" data-since="15" x1="292" y1="386" x2="282" y2="406"/>
+        <!-- CloudFront -->
+        <line class="edge dashed" data-since="15" x1="252" y1="42" x2="172" y2="82"/>
+        <line class="edge dashed" data-since="15" x1="105" y1="114" x2="228" y2="416"/>
+        <!-- Cross-region -->
+        <line class="edge dashed" data-since="13" x1="320" y1="106" x2="608" y2="234"/>
+        <line class="edge" data-since="13" x1="452" y1="430" x2="688" y2="430"/>
+        <line class="edge" data-since="13" x1="326" y1="438" x2="583" y2="438"/>
+        <text class="edge-label" data-since="13" x="570" y="424">global tables (active-active)</text>
+        <text class="edge-label" data-since="13" x="455" y="452">S3 CRR</text>
+
+        <!-- ===================== NODES ===================== -->
+        <!-- Users -->
+        <g class="node cat-net" data-since="2">
+          <rect class="box" x="250" y="24" width="140" height="32" rx="16"/>
+          <text class="n-label" x="320" y="40">Users</text>
+        </g>
+
+        <!-- Geo-routing -->
+        <g class="node cat-net" data-since="13">
+          <rect class="box" x="245" y="76" width="150" height="30" rx="6"/>
+          <text class="n-label" x="320" y="91">Geo-routing</text>
+        </g>
+
+        <!-- CloudFront -->
+        <g class="node cat-net" data-since="15">
+          <rect class="box" x="40" y="72" width="132" height="42" rx="6"/>
+          <text class="n-label" x="106" y="88">CloudFront</text>
+          <text class="n-sub"   x="106" y="102">edge cache</text>
+        </g>
+
+        <!-- ALB -->
+        <g class="node cat-net" data-since="8">
+          <rect class="box" x="255" y="128" width="130" height="32" rx="6"/>
+          <text class="n-label" x="320" y="144">ALB</text>
+        </g>
+
+        <!-- Monolith -->
+        <g class="node cat-compute" data-since="2" data-until="5">
+          <rect class="box" x="240" y="210" width="160" height="64" rx="8"/>
+          <text class="n-label" x="320" y="236">Monolith</text>
+          <text class="n-sub"   x="320" y="252">upload · download · search · meta</text>
+        </g>
+
+        <!-- Services grid -->
+        <g class="node cat-compute" data-since="6">
+          <rect class="box" x="232" y="214" width="84" height="40" rx="6"/>
+          <text class="n-label" x="274" y="230" font-size="10">Search</text>
+          <text class="n-sub"   x="274" y="244">replica ×N</text>
+        </g>
+        <g class="node cat-compute" data-since="6">
+          <rect class="box" x="322" y="214" width="84" height="40" rx="6"/>
+          <text class="n-label" x="364" y="230" font-size="10">Meta API</text>
+          <text class="n-sub"   x="364" y="244">replica ×N</text>
+        </g>
+        <g class="node cat-compute" data-since="6">
+          <rect class="box" x="232" y="266" width="84" height="40" rx="6"/>
+          <text class="n-label" x="274" y="282" font-size="10">Upload</text>
+          <text class="n-sub"   x="274" y="296">single</text>
+        </g>
+        <g class="node cat-compute" data-since="6">
+          <rect class="box" x="322" y="266" width="84" height="40" rx="6"/>
+          <text class="n-label" x="364" y="282" font-size="10">Download</text>
+          <text class="n-sub"   x="364" y="296">single</text>
+        </g>
+
+        <!-- ElastiCache -->
+        <g class="node cat-data" data-since="15">
+          <rect class="box" x="232" y="356" width="176" height="30" rx="6"/>
+          <text class="n-label" x="320" y="371">ElastiCache · image_id → meta</text>
+        </g>
+
+        <!-- S3 -->
+        <g class="node cat-data" data-since="4">
+          <rect class="box" x="225" y="406" width="100" height="48" rx="6"/>
+          <text class="n-label" x="275" y="424">S3</text>
+          <text class="n-sub" id="s3-s" x="275" y="440">images</text>
+        </g>
+
+        <!-- Metadata store (morphs) -->
+        <g class="node cat-data" id="ms-group" data-since="2">
+          <rect class="box" x="340" y="406" width="112" height="48" rx="6"/>
+          <text class="n-label" id="ms-l" x="396" y="424">Local Disk</text>
+          <text class="n-sub"   id="ms-s" x="396" y="440">photos + metadata</text>
+        </g>
+
+        <!-- Region B compact stack -->
+        <g class="node cat-compute" data-since="13">
+          <rect class="box" x="610" y="212" width="150" height="60" rx="8"/>
+          <text class="n-label" x="685" y="236">Services</text>
+          <text class="n-sub"   x="685" y="252">replicated</text>
+        </g>
+        <g class="node cat-data" data-since="15">
+          <rect class="box" x="592" y="356" width="90" height="30" rx="6"/>
+          <text class="n-label" x="637" y="371" font-size="10">cache</text>
+        </g>
+        <g class="node cat-data" data-since="13">
+          <rect class="box" x="585" y="406" width="94" height="48" rx="6"/>
+          <text class="n-label" x="632" y="430">S3</text>
+        </g>
+        <g class="node cat-data" data-since="13">
+          <rect class="box" x="690" y="406" width="112" height="48" rx="6"/>
+          <text class="n-label" x="746" y="424" font-size="10">DynamoDB</text>
+          <text class="n-sub"   x="746" y="440">replica</text>
+        </g>
+
+      </svg>
+    </div>
+
+    <div class="panel" id="panel"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="btn-prev" onclick="advance(-1)">◀ Prev</button>
+    <span class="step-counter" id="step-counter"></span>
+    <button class="btn" id="btn-next" onclick="advance(1)">Next ▶</button>
+  </div>
+</div>
+
+<script>
+// ─── Slide content ──────────────────────────────────────────────────────────
+const SLIDES = [
+  { // 0 — title
+    full: true,
+    kicker: 'System design',
+    title: 'Design a planet-scale image-serving system',
+    sub: 'Users can upload, search for, and view images · inspired by sre.google/classroom/imageserver',
+    points: [
+      'Quickly and reliably access uploaded photos',
+      'Search images by keyword',
+      'Share photos with friends and family',
+    ],
+    extra: '<div class="callout"><div class="card"><span class="tag tag-tr">How to read this</span><b style="color:#60a5fa">Blue</b> slides open each scale with a question; <b style="color:#fbbf24">amber 🚨</b> slides pose a specific bottleneck. The slide after each answers it — and the diagram accretes as traffic climbs.</div></div>',
+  },
+
+  { // 1 — INTRO: local
+    intro: true, full: true,
+    kicker: '▲ Scaling up · 1–10 users',
+    title: 'Where do you even start?',
+    points: [
+      'A handful of users, no traffic problems yet — what’s the <b>simplest thing</b> that serves images end-to-end?',
+    ],
+  },
+  { // 2 — local
+    kicker: 'Stage 1 · 1–10 users',
+    title: 'Local — a single monolith',
+    points: [
+      'One server handles <b>everything</b>: upload, download, search, and metadata.',
+      'Everything reads / writes to <b>local disk</b>.',
+      'Request flow is straightforward: <span class="hi">user → server → storage</span>, all on one machine.',
+    ],
+  },
+
+  { // 3 — INTRO: very small
+    intro: true,
+    kicker: '▲ Scaling up · 100 users',
+    title: 'The monolith still works — so what changes at 100 users?',
+    points: [
+      'Photos are piling up on <b>one machine’s disk</b>. What’s the first thing you’d pull out?',
+    ],
+  },
+  { // 4 — very small
+    kicker: 'Stage 2 · 100 users · 1 region',
+    title: 'Split out the storage layer',
+    points: [
+      'As storage grows, move photo storage to an <b>external service</b>.',
+      '<span class="hi-p">S3</span> object storage fits well — metadata maps each key to a photo.',
+      'Metadata is still small enough to <b>stay on local disk</b>.',
+    ],
+    extra: '<table class="compare"><tr><th>Type</th><th>What it is</th><th>Reach</th></tr>' +
+      '<tr><td><b>EBS</b></td><td>Network block storage — raw disk your OS formats. One instance at a time*.</td><td>Single AZ</td></tr>' +
+      '<tr><td><b>EFS</b></td><td>Network file system — many instances mount it at once, like a shared drive.</td><td>Single region</td></tr>' +
+      '<tr><td><b>S3</b></td><td>Object storage — each file has an id. Best fit for large files like photos.</td><td>Global</td></tr></table>',
+  },
+
+  { // 5 — INTRO: small
+    intro: true,
+    kicker: '▲ Scaling up · 10,000 users',
+    title: '100× the traffic hits one server. Where does it hurt first?',
+    points: [
+      'Hint: people <b>search</b> far more than they upload. Reads and writes don’t stress the system the same way.',
+    ],
+  },
+  { // 6 — microservices
+    kicker: 'Stage 3 · 10,000 users · 1 region',
+    title: 'Break the monolith into services',
+    points: [
+      'Reads ≫ writes: people <b>search</b> far more than they upload or download.',
+      'Split into four services: <b>Search, Meta API, Upload, Download</b>.',
+      'Replicate Search + Meta API — <span class="hi">replicating for performance</span>.',
+      'Upload / Download stay single replica (RAM, bandwidth & CPU heavy).',
+    ],
+  },
+  { // 7 — QUESTION: AZ down
+    q: true,
+    kicker: '🚨 The problem',
+    title: 'What happens when an AZ goes down?',
+    points: [
+      'Right now every replica lives in a <b>single Availability Zone</b>.',
+      'If that one AZ fails, the <b>whole service goes down with it</b>.',
+    ],
+  },
+  { // 8 — HA answer
+    kicker: 'Stage 3 · high availability',
+    title: 'Provision across two AZs',
+    points: [
+      'Add replicas in a <b>second AZ</b> — <span class="hi">replicating for high availability</span>.',
+      'When one AZ fails, load <b>fails over</b> to the other.',
+      'AWS: minimum 2 AZs, best practice 3 (quorum-based).',
+      'Add an <b>ALB</b> in front to distribute traffic.',
+    ],
+    extra: '<div class="callout"><div class="card"><span class="tag tag-tr">Look-alike, different goal</span>Replicating for performance and for HA produce the same picture — but one chases latency, the other chases uptime.</div></div>',
+  },
+  { // 9 — QUESTION: metadata file
+    q: true,
+    kicker: '🚨 The problem',
+    title: 'Metadata lives in a local file',
+    points: [
+      'Each server keeps metadata on its <b>own local disk</b>.',
+      'A local file <b>can’t simply be replicated</b> across servers — so how do we share it?',
+    ],
+  },
+  { // 10 — metadata answer
+    kicker: 'Stage 3 · solving metadata',
+    title: 'Two ways to share the metadata',
+    extra: '<div class="callout">' +
+      '<div class="card"><span class="tag tag-ok">Solution 1</span>Central store on <b>EFS</b> (network file system). <span class="tag tag-warn" style="margin-left:0">Trade-off</span> reads ~1–3ms vs ~0.1ms local; no clean fix without dropping files entirely.</div>' +
+      '<div class="card"><span class="tag tag-ok">Solution 2</span><b>Shard</b> the metadata — each server holds a subset (directory / hash / consistent hashing). <span class="tag tag-warn" style="margin-left:0">Trade-off</span> ops complexity; adding a server means rebalancing.</div>' +
+      '</div>',
+  },
+
+  { // 11 — INTRO: medium
+    intro: true,
+    kicker: '▲ Scaling up · 50k–100k users · going global',
+    title: 'Your users are now worldwide. How do you cut their latency?',
+    points: [
+      'A request from Asia still crosses the ocean to a <b>single region</b>. What would you change?',
+    ],
+  },
+  { // 12 — QUESTION: EFS region-bound
+    q: true,
+    kicker: '🚨 The problem',
+    title: 'EFS is region-bound',
+    points: [
+      'Our metadata now lives on <b>EFS</b> — but EFS <b>can’t cross regions</b>.',
+      'As we expand to a second region, <b>how do we serve metadata there?</b>',
+    ],
+  },
+  { // 13 — medium answer
+    kicker: 'Stage 4 · 50k–100k users · 2 regions',
+    title: 'Go multi-region',
+    points: [
+      'Deploy closer to users with <b>geolocation-based routing</b>.',
+      '✅ S3 <b>cross-region replication</b> works out of the box.',
+      'Migrate metadata to <span class="hi-p">DynamoDB global tables</span> — active-active; reads & writes stay <b>local</b>.',
+      'Enable <b>autoscaling</b> — up on load, down when quiet.',
+    ],
+  },
+
+  { // 14 — INTRO: large
+    intro: true,
+    kicker: '▲ Scaling up · 1,000,000++ users',
+    title: 'Compute scales fine now. So what’s the new bottleneck?',
+    points: [
+      'Hint: it’s no longer about servers. Where does a <b>million users</b> create pressure?',
+    ],
+  },
+  { // 15 — large
+    kicker: 'Stage 5 · 1,000,000++ global users',
+    title: 'Scaling shifts from compute to data',
+    points: [
+      'Metadata cache: <span class="hi-p">ElastiCache</span> (Redis / Memcached), <code>image_id → metadata</code>.',
+      'Image cache: <span class="hi">CloudFront</span> edge (S3 origin) → low latency globally.',
+      'Cold, rarely-accessed data → <b>S3 tiering</b> keeps cost in check.',
+    ],
+  },
+
+  { // 16 — takeaways
+    full: true,
+    kicker: 'Wrap-up',
+    title: 'Takeaways',
+    points: [
+      '<b>Replicating for performance vs HA</b> — they look the same but serve different goals.',
+      '<b>Sharding</b> = partitioning data across instances — solves scale, adds routing complexity.',
+      'Scaling <b>compute</b> is relatively easy; scaling <b>data</b> is where it gets hard.',
+    ],
+    extra: '<div class="callout">' +
+      '<div class="card"><span class="tag tag-warn">Trade-offs everywhere ⚖️</span>A user in another region won’t see a new photo instantly — <b>eventual consistency</b>. Older data loads slower.</div>' +
+      '<div class="card"><span class="tag tag-ok">Room to optimize</span>Shift upload/download to <b>async queues</b> to free resources; generate <b>thumbnails lazily</b> on first request.</div>' +
+      '</div>',
+  },
+];
+
+// Stage rail: label → target slide + active range
+const STAGES = [
+  { label: 'Local',      s: 1,  r: [1, 2] },
+  { label: 'Very small', s: 3,  r: [3, 4] },
+  { label: 'Small',      s: 5,  r: [5, 10] },
+  { label: 'Medium',     s: 11, r: [11, 13] },
+  { label: 'Large',      s: 14, r: [14, 15] },
+  { label: 'Takeaways',  s: 16, r: [16, 16] },
+];
+
+// Morphing metadata-store labels, by slide index
+const MS = {
+  2:  ['Local Disk', 'photos + metadata'],
+  3:  ['Local Disk', 'photos + metadata'],
+  4:  ['Local Disk', 'metadata'],
+  5:  ['Local Disk', 'metadata'],
+  6:  ['Local Disk', 'metadata / server'],
+  7:  ['Local Disk', 'metadata / server'],
+  8:  ['Local Disk', 'metadata'],
+  9:  ['Local Disk', 'metadata'],
+  10: ['EFS', 'central metadata'],
+  11: ['EFS', 'central metadata'],
+  12: ['EFS', 'central metadata'],
+  13: ['DynamoDB', 'global tables'],
+  14: ['DynamoDB', 'global tables'],
+  15: ['DynamoDB', 'global tables'],
+};
+const S3SUB = { 15: 'images · tiered' };
+
+// On these question slides, flag the node that IS the problem
+const PROBLEM = { 7: 'aza-group', 9: 'ms-group', 12: 'ms-group' };
+
+// Per-slide camera: zoom the viewBox to whatever the diagram is actually using,
+// so each state fills the canvas instead of sitting in one fixed wide frame.
+const VB_SINGLE = '205 8 270 468';   // one region — the left stack
+const VB_MULTI  = '185 8 645 468';   // two regions side by side
+const VB_LARGE  = '25 8 805 468';    // + CloudFront out to the left
+const VIEWBOX = { 13: VB_MULTI, 14: VB_MULTI, 15: VB_LARGE };
+
+let cur = 0;
+
+// ─── Render stage rail ───────────────────────────────────────────────────────
+const stagesEl = document.getElementById('stages');
+STAGES.forEach((st, i) => {
+  const b = document.createElement('button');
+  b.className = 'stage-chip';
+  b.textContent = st.label;
+  b.onclick = () => { cur = st.s; render(); };
+  b.dataset.idx = i;
+  stagesEl.appendChild(b);
+});
+
+// ─── Diagram state by slide ──────────────────────────────────────────────────
+function renderDiagram(slide) {
+  document.querySelectorAll('#svg .node, #svg .edge, #svg .edge-label').forEach(el => {
+    const since = parseInt(el.dataset.since, 10);
+    const until = el.dataset.until ? parseInt(el.dataset.until, 10) : Infinity;
+    const visible = slide >= since && slide <= until;
+    el.classList.toggle('vis', visible);
+    el.classList.toggle('new', visible && slide === since);
+    el.classList.remove('problem');
+  });
+  // Morph metadata store + S3 sub
+  const ms = MS[slide];
+  if (ms) {
+    document.getElementById('ms-l').textContent = ms[0];
+    document.getElementById('ms-s').textContent = ms[1];
+  }
+  document.getElementById('s3-s').textContent = S3SUB[slide] || 'images';
+  // Problem highlight
+  if (PROBLEM[slide]) {
+    document.getElementById(PROBLEM[slide]).classList.add('problem');
+  }
+  // Zoom the camera to this slide's active region
+  document.getElementById('svg').setAttribute('viewBox', VIEWBOX[slide] || VB_SINGLE);
+}
+
+// ─── Render panel + everything ───────────────────────────────────────────────
+function render() {
+  const s = SLIDES[cur];
+  const stage = document.getElementById('stage');
+  stage.classList.toggle('full', !!s.full);
+
+  let html = `<div class="kicker">${s.kicker}</div><h2>${s.title}</h2>`;
+  if (s.sub) html += `<div class="sub">${s.sub}</div>`;
+  if (s.points) {
+    html += '<ul class="points">' + s.points.map(p => `<li>${p}</li>`).join('') + '</ul>';
+  }
+  if (s.extra) html += s.extra;
+  const panel = document.getElementById('panel');
+  panel.className = 'panel' + (s.q ? ' q' : '') + (s.intro ? ' intro' : '');
+  panel.innerHTML = html;
+
+  if (!s.full) renderDiagram(cur);
+
+  // Stage rail active state
+  document.querySelectorAll('.stage-chip').forEach((c, i) => {
+    const st = STAGES[i];
+    c.classList.toggle('active', cur >= st.r[0] && cur <= st.r[1]);
+  });
+
+  document.getElementById('step-counter').textContent = `${cur + 1} / ${SLIDES.length}`;
+  document.getElementById('btn-prev').disabled = cur === 0;
+  document.getElementById('btn-next').disabled = cur === SLIDES.length - 1;
+}
+
+function advance(delta) {
+  cur = Math.max(0, Math.min(SLIDES.length - 1, cur + delta));
+  render();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') advance(1);
+  if (e.key === 'ArrowLeft')  advance(-1);
+});
+
+// Deep-link: #3 opens slide index 3
+const h = parseInt(location.hash.replace('#', ''), 10);
+if (!isNaN(h) && h >= 0 && h < SLIDES.length) cur = h;
+
+render();
+</script>
+</body>
+</html>
