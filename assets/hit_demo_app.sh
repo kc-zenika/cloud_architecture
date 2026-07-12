@@ -2,7 +2,7 @@
 
 set -uo pipefail
 
-HOST="${1:-localhost:8080}"
+HOST="${1:-localhost}"
 
 demo() {
   local path="$1" desc="$2"

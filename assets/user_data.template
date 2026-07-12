@@ -11,8 +11,8 @@ useradd --system --no-create-home --shell /usr/sbin/nologin app
 # 3. Pull the app binary from S3
 # Note: this requires the IAM instance profile attached to the launch template
 mkdir -p /opt/app
-aws s3 cp "s3://${bucket_name}/app/server" /opt/app/server
-chmod +x /opt/app/server
+aws s3 cp "s3://${bucket_name}/app/demo-server" /opt/app/demo-server
+chmod +x /opt/app/demo-server
 chown -R app:app /opt/app
 
 # 4. Install and start the systemd service
@@ -26,7 +26,7 @@ Type=simple
 User=app
 Group=app
 WorkingDirectory=/opt/app
-ExecStart=/opt/app/server
+ExecStart=/opt/app/demo-server
 Restart=on-failure
 RestartSec=2
 

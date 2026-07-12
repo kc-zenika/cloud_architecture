@@ -1,1 +1,1 @@
-# point ALB to ASG
+# create ALB and security groups
