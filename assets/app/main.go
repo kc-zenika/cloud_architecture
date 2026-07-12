@@ -6,6 +6,8 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -30,9 +32,48 @@ func readHostname() string {
 	return h
 }
 
-func handleIndex(w http.ResponseWriter, r *http.Request) {
+func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	fmt.Fprintf(w, "ok host=%s\n", hostname)
+	fmt.Fprintln(w, "ok")
+}
+
+func handleInfo(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprintf(w, "host=%s %s\n", hostname, readStats())
+}
+
+// readStats is read fresh on every /info request, unlike hostname -- CPU
+// load and memory usage change constantly, and watching them change is the
+// point of hitting this endpoint during the scaling demo.
+func readStats() string {
+	load := "unknown"
+	if b, err := os.ReadFile("/proc/loadavg"); err == nil {
+		if fields := strings.Fields(string(b)); len(fields) > 0 {
+			load = fields[0]
+		}
+	}
+
+	memPct := "unknown"
+	if b, err := os.ReadFile("/proc/meminfo"); err == nil {
+		var total, avail float64
+		for _, line := range strings.Split(string(b), "\n") {
+			fields := strings.Fields(line)
+			if len(fields) < 2 {
+				continue
+			}
+			switch fields[0] {
+			case "MemTotal:":
+				total, _ = strconv.ParseFloat(fields[1], 64)
+			case "MemAvailable:":
+				avail, _ = strconv.ParseFloat(fields[1], 64)
+			}
+		}
+		if total > 0 {
+			memPct = fmt.Sprintf("%.1f", (total-avail)/total*100)
+		}
+	}
+
+	return fmt.Sprintf("load1=%s mem_used_pct=%s", load, memPct)
 }
 
 func handleError(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +126,8 @@ func instrument(path string, h http.HandlerFunc) http.Handler {
 
 func main() {
 	mux := http.NewServeMux()
-	mux.Handle("GET /", instrument("/", handleIndex))
+	mux.Handle("GET /healthz", instrument("/healthz", handleHealthCheck))
+	mux.Handle("GET /info", instrument("/info", handleInfo))
 	mux.Handle("GET /slow", instrument("/slow", handleSlow))
 	mux.Handle("GET /error", instrument("/error", handleError))
 	mux.Handle("GET /metrics", promhttp.Handler())

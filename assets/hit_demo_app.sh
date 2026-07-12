@@ -14,8 +14,11 @@ demo() {
   echo
 }
 
-demo "/" \
+demo "/healthz" \
   "Always 200. This is the ALB target group's health check target."
+
+demo "/info" \
+  "Reports which instance answered (hostname) plus its current CPU load and memory usage -- useful for watching ALB round-robin across ASG instances during the scaling demo."
 
 demo "/slow" \
   "Simulates latency: sleeps a random 500ms-3000ms before responding 200. Watch ALB's TargetResponseTime metric during this call."

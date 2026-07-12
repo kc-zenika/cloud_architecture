@@ -11,9 +11,9 @@ import (
 )
 
 func TestMetricsSmoke(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	rec := httptest.NewRecorder()
-	instrument("/", handleIndex).ServeHTTP(rec, req)
+	instrument("/healthz", handleHealthCheck).ServeHTTP(rec, req)
 
 	metricsReq := httptest.NewRequest(http.MethodGet, "/metrics", nil)
 	metricsRec := httptest.NewRecorder()
@@ -61,11 +61,11 @@ func TestHandleSlow(t *testing.T) {
 	}
 }
 
-func TestHandleIndex(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+func TestHandleHealthCheck(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	rec := httptest.NewRecorder()
 
-	handleIndex(rec, req)
+	handleHealthCheck(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
@@ -74,6 +74,18 @@ func TestHandleIndex(t *testing.T) {
 	if !strings.Contains(body, "ok") {
 		t.Errorf("body = %q, want it to contain %q", body, "ok")
 	}
+}
+
+func TestHandleInfo(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/info", nil)
+	rec := httptest.NewRecorder()
+
+	handleInfo(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusOK)
+	}
+	body := rec.Body.String()
 	if !strings.Contains(body, hostname) {
 		t.Errorf("body = %q, want it to contain hostname %q", body, hostname)
 	}

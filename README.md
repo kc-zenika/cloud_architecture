@@ -13,3 +13,6 @@
   - a few too many ducks 🦆 involved
   - a lot of networking and security
 
+## Part 2
+- Prerequisites
+  - install aws, docker, terraform
