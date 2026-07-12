@@ -1,0 +1,38 @@
+#!/bin/bash
+set -euo pipefail
+
+# 1. Install stress-ng for the CPU scale-out demo
+dnf update -y
+dnf install -y stress-ng
+
+# 2. Create the unprivileged user the app runs as
+useradd --system --no-create-home --shell /usr/sbin/nologin app
+
+# 3. Pull the app binary from S3
+# Note: this requires the IAM instance profile attached to the launch template
+mkdir -p /opt/app
+aws s3 cp "s3://${bucket_name}/app/server" /opt/app/server
+chmod +x /opt/app/server
+chown -R app:app /opt/app
+
+# 4. Install and start the systemd service
+cat <<'EOF' > /etc/systemd/system/app.service
+[Unit]
+Description=Cloud Architecture Workshop Demo App
+After=network.target
+
+[Service]
+Type=simple
+User=app
+Group=app
+WorkingDirectory=/opt/app
+ExecStart=/opt/app/server
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now app.service

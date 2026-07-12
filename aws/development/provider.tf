@@ -11,10 +11,10 @@ terraform {
 
   # backend
   backend "s3" {
-    bucket       = "workshop-tfstate-942195279338"
+    bucket       = "workshop-tfstate-<ACCOUNT_ID>"
     key          = "terraform.tfstate"
     region       = "ap-southeast-1"
-    use_lockfile = true
+    use_lockfile = true # makes the S3 backend do locking without DynamoDB
     encrypt      = true
   }
 }
