@@ -18,3 +18,7 @@ terraform {
     encrypt      = true
   }
 }
+
+locals {
+  account_id  = "942195279338"
+}

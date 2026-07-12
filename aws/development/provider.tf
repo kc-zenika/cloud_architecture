@@ -18,3 +18,9 @@ terraform {
     encrypt      = true
   }
 }
+
+# Backend blocks can't reference locals, so <ACCOUNT_ID> above still
+# has to be filled in by hand -- everything else derives the account ID here.
+locals {
+  account_id  = "<ACCOUNT_ID>"
+}

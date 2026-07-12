@@ -8,8 +8,8 @@ data "aws_iam_policy_document" "app_policy" {
     ]
 
     resources = [
-      "arn:aws:s3:::workshop-part2-app-942195279338",
-      "arn:aws:s3:::workshop-part2-app-942195279338/*"
+      "arn:aws:s3:::workshop-part2-app-${local.account_id}",
+      "arn:aws:s3:::workshop-part2-app-${local.account_id}/*"
     ]
   }
 }
