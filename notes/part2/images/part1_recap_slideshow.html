@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Part 1 Recap Slideshow</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 36px;
+  }
+
+  h1 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  .stages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+    justify-content: center;
+    max-width: 1100px;
+  }
+
+  .stage-chip {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .stage-chip:hover { border-color: #60a5fa; color: #e2e8f0; }
+  .stage-chip.active { background: #1d4ed8; border-color: #3b82f6; color: #fff; }
+
+  .deck {
+    width: 100%;
+    max-width: 1050px;
+  }
+
+  .stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .diagram-wrap {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 14px;
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .viz-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #60a5fa;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .arch-frame {
+    flex: 1;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    background: #0b1220;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .arch-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .flow-frame {
+    flex: 1;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    background: #0b1220;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .flow-wrap {
+    flex: 1;
+    padding: 8px;
+  }
+
+  .flow-wrap svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .flow-note {
+    padding: 8px 10px;
+    border-top: 1px solid #334155;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    min-height: 36px;
+  }
+
+  .f-edge {
+    stroke: #334155;
+    stroke-width: 2;
+    transition: stroke 0.35s, stroke-width 0.35s;
+  }
+  .f-edge.used { stroke: #1d4ed8; stroke-width: 1.8; }
+  .f-edge.active { stroke: #3b82f6; stroke-width: 2.6; }
+
+  .f-node {
+    fill: #1e293b;
+    stroke: #475569;
+    stroke-width: 2;
+    transition: fill 0.3s, stroke 0.3s;
+  }
+  .f-node.active { fill: #1d4ed8; stroke: #60a5fa; }
+
+  .f-label {
+    font-size: 11px;
+    fill: #cbd5e1;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+  }
+
+  .f-sublabel {
+    font-size: 8.5px;
+    fill: #64748b;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+  }
+
+  #flow-packet {
+    fill: #fbbf24;
+    filter: drop-shadow(0 0 6px #fbbf24);
+    transition: cx 0.6s cubic-bezier(0.4,0,0.2,1),
+                cy 0.6s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .viz-list {
+    list-style: none;
+    display: grid;
+    gap: 8px;
+    margin-top: 4px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .viz-list li {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.86rem;
+    line-height: 1.4;
+    color: #cbd5e1;
+  }
+
+  .panel {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .kicker {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #60a5fa;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .panel h2 {
+    font-size: 1.36rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+
+  .sub {
+    font-size: 0.92rem;
+    color: #94a3b8;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  .points {
+    list-style: none;
+    margin-top: 2px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .points li {
+    font-size: 0.93rem;
+    line-height: 1.5;
+    color: #cbd5e1;
+    padding: 5px 0 5px 18px;
+    position: relative;
+  }
+
+  .points li::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 12px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #475569;
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 20px;
+    justify-content: center;
+  }
+
+  .btn {
+    padding: 8px 24px;
+    border-radius: 6px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: #e2e8f0;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .btn:hover:not(:disabled) { border-color: #60a5fa; background: #263348; }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .step-counter {
+    font-size: 0.85rem;
+    color: #64748b;
+    min-width: 80px;
+    text-align: center;
+  }
+
+  @media (max-width: 880px) {
+    .stage { grid-template-columns: 1fr; }
+    .diagram-wrap { min-height: 320px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Part 1 Recap Walkthrough</h1>
+
+<div class="stages" id="stages"></div>
+
+<div class="deck">
+  <div class="stage">
+    <div class="diagram-wrap">
+      <div class="viz-title" id="viz-title"></div>
+      <div class="arch-frame" id="arch-frame">
+        <img src="../../part1/architecture.png" alt="Part 1 architecture">
+      </div>
+      <div class="flow-frame" id="flow-frame">
+        <div class="flow-wrap">
+          <svg viewBox="0 0 620 240" aria-label="Packet flow animation">
+            <line id="f-edge-internet-igw" class="f-edge" x1="60" y1="120" x2="150" y2="120"/>
+            <line id="f-edge-igw-naclpub" class="f-edge" x1="150" y1="120" x2="250" y2="120"/>
+            <line id="f-edge-naclpub-alb" class="f-edge" x1="250" y1="120" x2="350" y2="70"/>
+            <line id="f-edge-naclpub-nat" class="f-edge" x1="250" y1="120" x2="350" y2="170"/>
+            <line id="f-edge-alb-naclpriv" class="f-edge" x1="350" y1="70" x2="450" y2="120"/>
+            <line id="f-edge-nat-naclpriv" class="f-edge" x1="350" y1="170" x2="450" y2="120"/>
+            <line id="f-edge-naclpriv-ec2" class="f-edge" x1="450" y1="120" x2="560" y2="120"/>
+
+            <circle id="f-node-internet" class="f-node" cx="60" cy="120" r="20"/>
+            <text class="f-label" x="60" y="117">Internet</text>
+            <text class="f-sublabel" x="60" y="128">User/Repo</text>
+
+            <circle id="f-node-igw" class="f-node" cx="150" cy="120" r="20"/>
+            <text class="f-label" x="150" y="120">IGW</text>
+
+            <circle id="f-node-naclpub" class="f-node" cx="250" cy="120" r="20"/>
+            <text class="f-label" x="250" y="117">NACL</text>
+            <text class="f-sublabel" x="250" y="128">Public</text>
+
+            <circle id="f-node-alb" class="f-node" cx="350" cy="70" r="20"/>
+            <text class="f-label" x="350" y="70">ALB</text>
+
+            <circle id="f-node-nat" class="f-node" cx="350" cy="170" r="20"/>
+            <text class="f-label" x="350" y="170">NAT</text>
+
+            <circle id="f-node-naclpriv" class="f-node" cx="450" cy="120" r="20"/>
+            <text class="f-label" x="450" y="117">NACL</text>
+            <text class="f-sublabel" x="450" y="128">Private</text>
+
+            <circle id="f-node-ec2" class="f-node" cx="560" cy="120" r="20"/>
+            <text class="f-label" x="560" y="117">EC2</text>
+            <text class="f-sublabel" x="560" y="128">App</text>
+
+            <circle id="flow-packet" cx="60" cy="120" r="7"/>
+          </svg>
+        </div>
+        <div class="flow-note" id="flow-note"></div>
+      </div>
+      <ul class="viz-list" id="viz-list"></ul>
+    </div>
+
+    <div class="panel">
+      <div class="kicker" id="kicker"></div>
+      <h2 id="title"></h2>
+      <p class="sub" id="sub"></p>
+      <ul class="points" id="points"></ul>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="btn-prev" onclick="advance(-1)">◀ Prev</button>
+    <span class="step-counter" id="step-counter"></span>
+    <button class="btn" id="btn-next" onclick="advance(1)">Next ▶</button>
+  </div>
+</div>
+
+<script>
+const SLIDES = [
+  {
+    chip: '1. Build',
+    kicker: 'Architecture Overview',
+    title: 'What You Built In Part 1',
+    sub: 'This is the complete system you assembled before Part 2.',
+    points: [
+      'VPC with public and private subnets across AZs.',
+      'IGW, NAT Gateway, route tables, NACLs, and Security Groups.',
+      'ALB in public subnet and EC2 app in private subnet.',
+      'IAM role + instance profile, and VPC endpoints for private service access.',
+      'Terraform workflow with remote state in S3 + lock in DynamoDB.'
+    ],
+    vizTitle: 'Part 1 Architecture',
+    vizMode: 'image',
+    vizItems: []
+  },
+  {
+    chip: '2. Analogy',
+    kicker: 'Mental Model',
+    title: 'Office Building Analogy (Optional Lens)',
+    sub: 'Use this only if it helps your understanding; default to AWS terms when in doubt.',
+    points: [
+      'VPC = office compound, subnet = floor, route table = directional signs.',
+      'IGW = front gate, NAT = outbound mailroom.',
+      'NACL = floor security desk, Security Group = room-level access control.',
+      'ALB = receptionist routing incoming visitors.'
+    ],
+    vizTitle: 'Analogy Mapping',
+    vizMode: 'list',
+    vizItems: [
+      'VPC -> Office compound',
+      'Public subnet -> Reception floor',
+      'Private subnet -> Staff-only floor',
+      'IGW -> Front gate',
+      'NAT -> Outbound mailroom',
+      'ALB -> Receptionist'
+    ]
+  },
+  {
+    chip: '3. Network',
+    kicker: 'Networking Fundamentals',
+    title: 'VPC, Subnets, Routes, IGW, NAT',
+    sub: 'Core networking logic that drives all packet behavior in your architecture.',
+    points: [
+      'Public subnet default route: 0.0.0.0/0 -> IGW.',
+      'Private subnet default route: 0.0.0.0/0 -> NAT Gateway.',
+      '0.0.0.0/0 means any destination not inside your VPC.',
+      'Subnets are AZ-specific; spread across AZs for resilience.',
+      'CIDR planning early avoids overlap and migration pain later.'
+    ],
+    vizTitle: 'Routing Snapshot',
+    vizMode: 'list',
+    vizItems: [
+      'Public route table: default route to IGW',
+      'Private route table: default route to NAT',
+      'IGW: internet path',
+      'NAT: outbound-only bridge for private workloads'
+    ]
+  },
+  {
+    chip: '4. Flow 1',
+    kicker: 'Packet Flow #1',
+    title: 'User -> ALB -> EC2 (Request/Response)',
+    sub: 'How client traffic reaches the app while keeping EC2 private.',
+    points: [
+      'Browser sends HTTPS to ALB on TCP 443.',
+      'Public NACL inbound Rule 110 allows 443 from internet.',
+      'ALB forwards traffic to EC2 in private subnet.',
+      'Private NACL inbound Rule 110 allows 443 from VPC CIDR.',
+      'Response returns on ephemeral ports; Rule 120 must allow that return path.'
+    ],
+    vizTitle: 'Flow 1 Animation',
+    vizMode: 'flow1',
+    vizItems: [
+      'IGW entry',
+      'Public NACL inbound (Rule 110)',
+      'ALB target routing',
+      'Private NACL inbound (Rule 110)',
+      'Return path via Rule 120'
+    ]
+  },
+  {
+    chip: '5. Flow 2',
+    kicker: 'Packet Flow #2',
+    title: 'EC2 -> NAT -> Internet (Outbound/Return)',
+    sub: 'How private instances fetch external dependencies safely.',
+    points: [
+      'EC2 sends HTTPS outbound on 443 from private subnet.',
+      'Private route table sends default traffic to NAT.',
+      'NAT translates source to its public IP for internet reachability.',
+      'Inbound return traffic hits public NACL ephemeral rule first.',
+      'NAT reverses translation and private NACL inbound Rule 120 admits response.'
+    ],
+    vizTitle: 'Flow 2 Animation',
+    vizMode: 'flow2',
+    vizItems: [
+      'Private NACL outbound Rule 110',
+      'NAT source translation',
+      'Public NACL outbound Rule 110',
+      'Public NACL inbound Rule 120',
+      'Private NACL inbound Rule 120'
+    ]
+  },
+  {
+    chip: '6. NACL vs SG',
+    kicker: 'Security Layers',
+    title: 'NACL vs Security Group',
+    sub: 'Know when each layer should carry the policy intent.',
+    points: [
+      'NACL is subnet-level, stateless, ordered, and supports allow/deny.',
+      'Security Group is ENI-level, stateful, and allow-only.',
+      'NACL needs explicit return path rules for ephemeral traffic.',
+      'Workshop SG pattern: ALB SG -> app SG for ingress chaining.'
+    ],
+    vizTitle: 'Comparison',
+    vizMode: 'list',
+    vizItems: [
+      'NACL: coarse perimeter guardrails',
+      'SG: fine-grained workload intent',
+      'Stateful vs stateless is the key behavior difference'
+    ]
+  },
+  {
+    chip: '7. Exercises',
+    kicker: 'Interactive Practice',
+    title: 'RDS, NAT Failure, and VPC Endpoints',
+    sub: 'Use these prompts to test if you can apply the model, not just repeat it.',
+    points: [
+      'RDS placement: private subnets + DB subnet group + SG rules.',
+      'NAT failure: private outbound breaks first; inbound path may still work.',
+      'VPC endpoints: Interface for SSM APIs, Gateway for S3 route-level integration.'
+    ],
+    vizTitle: 'Exercise Targets',
+    vizMode: 'list',
+    vizItems: [
+      'Design decision: where to place DB',
+      'Failure analysis: NAT outage blast radius',
+      'Connectivity design: SSM and S3 endpoint types'
+    ]
+  },
+  {
+    chip: '8. IAM',
+    kicker: 'Identity and Access',
+    title: 'Role -> Instance Profile -> Temporary Credentials',
+    sub: 'How EC2 safely accesses AWS services without static keys.',
+    points: [
+      'Custom policy granted S3 read permissions for app assets.',
+      'Trust policy allowed ec2.amazonaws.com to assume role.',
+      'AmazonSSMManagedInstanceCore enabled SSM management path.',
+      'Instance profile attached role to EC2; credentials delivered via IMDS.'
+    ],
+    vizTitle: 'IAM Chain',
+    vizMode: 'list',
+    vizItems: [
+      'Policy: what is allowed',
+      'Role: who can use policy',
+      'Instance profile: bind role to EC2',
+      'IMDS: temporary credential delivery'
+    ]
+  },
+  {
+    chip: '9. EC2',
+    kicker: 'Compute Provisioning',
+    title: 'AMI, User Data, Debugging, Cattle Mindset',
+    sub: 'What you configured and how you verified app startup behavior.',
+    points: [
+      'AMI sets the base OS image and root behavior.',
+      'User data installs nginx, pulls app content from S3, and customizes output.',
+      'Debug loop: systemctl status, curl localhost, cloud-init logs, IMDS checks.',
+      'If drift occurs, rebuild from code rather than hand-fixing snowflake instances.'
+    ],
+    vizTitle: 'EC2 Validation Loop',
+    vizMode: 'list',
+    vizItems: [
+      'Bootstrap -> Verify service -> Verify content -> Check logs',
+      'Recreate instances when needed (cattle, not pets)'
+    ]
+  },
+  {
+    chip: '10. Terraform',
+    kicker: 'IaC Workflow',
+    title: 'Code -> Plan -> Apply',
+    sub: 'Infrastructure managed as code with safe team collaboration controls.',
+    points: [
+      'resource blocks define desired infrastructure state.',
+      'plan previews drift and pending changes before execution.',
+      'Remote S3 backend centralizes state for shared visibility.',
+      'DynamoDB locking prevents simultaneous apply conflicts.',
+      'terraform import can re-capture manually created resources.'
+    ],
+    vizTitle: 'Terraform Essentials',
+    vizMode: 'list',
+    vizItems: [
+      'init -> plan -> apply -> destroy',
+      'State is Terraform memory',
+      'Remote backend + locking enables team safety'
+    ]
+  },
+  {
+    chip: '11. Self-check',
+    kicker: 'Readiness Check',
+    title: 'Can You Explain These Without Notes?',
+    sub: 'If yes, you are ready to continue into Part 2.',
+    points: [
+      'Why ALB is public while EC2 stays private.',
+      'Why private subnet needs NAT for outbound internet.',
+      'Why stateless NACL requires explicit ephemeral rules.',
+      'Why role + instance profile beats static credentials.',
+      'Why remote state + lock is required for reliable collaboration.'
+    ],
+    vizTitle: 'Pass Criteria',
+    vizMode: 'list',
+    vizItems: [
+      'You can narrate both packet flows hop-by-hop.',
+      'You can justify each control with security or reliability reasons.',
+      'You can explain Terraform workflow and state discipline.'
+    ]
+  }
+];
+
+let current = 0;
+const stagesEl = document.getElementById('stages');
+let flowTimer = null;
+let flowStep = 0;
+
+const FLOW_NODES = {
+  internet: { cx: 60, cy: 120 },
+  igw: { cx: 150, cy: 120 },
+  naclpub: { cx: 250, cy: 120 },
+  alb: { cx: 350, cy: 70 },
+  nat: { cx: 350, cy: 170 },
+  naclpriv: { cx: 450, cy: 120 },
+  ec2: { cx: 560, cy: 120 }
+};
+
+const FLOW_PATHS = {
+  flow1: [
+    'internet','igw','naclpub','alb','naclpriv','ec2','naclpriv','alb','naclpub','igw','internet'
+  ],
+  flow2: [
+    'ec2','naclpriv','nat','naclpub','igw','internet','igw','naclpub','nat','naclpriv','ec2'
+  ]
+};
+
+const FLOW_NOTES = {
+  flow1: [
+    'Client request starts from Internet.',
+    'Packet enters VPC via IGW.',
+    'Public NACL inbound Rule 110 allows TCP 443.',
+    'ALB receives request and routes to backend.',
+    'Private NACL inbound Rule 110 allows app path.',
+    'EC2 processes request.',
+    'Response heads back through private subnet.',
+    'ALB receives backend response.',
+    'Public NACL outbound Rule 120 allows ephemeral return.',
+    'Traffic exits via IGW.',
+    'Client receives response.'
+  ],
+  flow2: [
+    'EC2 starts outbound HTTPS request.',
+    'Private NACL outbound Rule 110 allows 443.',
+    'Packet reaches NAT for source translation.',
+    'Public NACL outbound Rule 110 allows internet egress.',
+    'Traffic exits VPC through IGW.',
+    'Internet repo receives request.',
+    'Return traffic re-enters via IGW on ephemeral destination.',
+    'Public NACL inbound Rule 120 allows return.',
+    'NAT reverses translation to EC2 private IP.',
+    'Private NACL inbound Rule 120 allows return path.',
+    'EC2 receives response.'
+  ]
+};
+
+function flowEdgeKey(a, b) {
+  const pairs = [
+    ['internet', 'igw'],
+    ['igw', 'naclpub'],
+    ['naclpub', 'alb'],
+    ['naclpub', 'nat'],
+    ['alb', 'naclpriv'],
+    ['nat', 'naclpriv'],
+    ['naclpriv', 'ec2']
+  ];
+  for (const [x, y] of pairs) {
+    if ((a === x && b === y) || (a === y && b === x)) return `f-edge-${x}-${y}`;
+  }
+  return null;
+}
+
+function resetFlowVisuals() {
+  document.querySelectorAll('.f-edge').forEach((e) => e.classList.remove('active', 'used'));
+  document.querySelectorAll('.f-node').forEach((n) => n.classList.remove('active'));
+  const pkt = document.getElementById('flow-packet');
+  pkt.setAttribute('cx', FLOW_NODES.internet.cx);
+  pkt.setAttribute('cy', FLOW_NODES.internet.cy);
+  document.getElementById('flow-note').textContent = '';
+}
+
+function stopFlowAnimation() {
+  if (flowTimer) {
+    clearInterval(flowTimer);
+    flowTimer = null;
+  }
+  resetFlowVisuals();
+}
+
+function renderFlowStep(mode) {
+  const route = FLOW_PATHS[mode];
+  const node = route[flowStep];
+  const pos = FLOW_NODES[node];
+  const pkt = document.getElementById('flow-packet');
+  pkt.setAttribute('cx', pos.cx);
+  pkt.setAttribute('cy', pos.cy);
+
+  document.querySelectorAll('.f-edge').forEach((e) => e.classList.remove('active', 'used'));
+  document.querySelectorAll('.f-node').forEach((n) => n.classList.remove('active'));
+
+  for (let i = 1; i <= flowStep; i++) {
+    const id = flowEdgeKey(route[i - 1], route[i]);
+    if (id) {
+      const edge = document.getElementById(id);
+      if (edge) edge.classList.add(i === flowStep ? 'active' : 'used');
+    }
+  }
+
+  const nodeEl = document.getElementById(`f-node-${node}`);
+  if (nodeEl) nodeEl.classList.add('active');
+
+  document.getElementById('flow-note').textContent = FLOW_NOTES[mode][flowStep] || '';
+}
+
+function startFlowAnimation(mode) {
+  stopFlowAnimation();
+  flowStep = 0;
+  renderFlowStep(mode);
+  flowTimer = setInterval(() => {
+    flowStep = (flowStep + 1) % FLOW_PATHS[mode].length;
+    renderFlowStep(mode);
+  }, 1100);
+}
+
+SLIDES.forEach((s, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'stage-chip';
+  btn.textContent = s.chip;
+  btn.onclick = () => {
+    current = i;
+    render();
+  };
+  stagesEl.appendChild(btn);
+});
+
+function render() {
+  const slide = SLIDES[current];
+
+  document.getElementById('kicker').textContent = slide.kicker;
+  document.getElementById('title').textContent = slide.title;
+  document.getElementById('sub').textContent = slide.sub;
+  document.getElementById('viz-title').textContent = slide.vizTitle;
+
+  const pointsEl = document.getElementById('points');
+  pointsEl.innerHTML = '';
+  slide.points.forEach((p) => {
+    const li = document.createElement('li');
+    li.textContent = p;
+    pointsEl.appendChild(li);
+  });
+
+  const listEl = document.getElementById('viz-list');
+  const flowFrame = document.getElementById('flow-frame');
+  listEl.innerHTML = '';
+  slide.vizItems.forEach((item) => {
+    const li = document.createElement('li');
+    li.textContent = item;
+    listEl.appendChild(li);
+  });
+
+  const archFrame = document.getElementById('arch-frame');
+  if (slide.vizMode === 'image') {
+    stopFlowAnimation();
+    archFrame.style.display = 'flex';
+    flowFrame.style.display = 'none';
+    listEl.style.display = 'none';
+  } else if (slide.vizMode === 'flow1' || slide.vizMode === 'flow2') {
+    archFrame.style.display = 'none';
+    listEl.style.display = 'none';
+    flowFrame.style.display = 'flex';
+    startFlowAnimation(slide.vizMode);
+  } else {
+    stopFlowAnimation();
+    archFrame.style.display = 'none';
+    flowFrame.style.display = 'none';
+    listEl.style.display = 'grid';
+  }
+
+  document.querySelectorAll('.stage-chip').forEach((chip, idx) => {
+    chip.classList.toggle('active', idx === current);
+  });
+
+  document.getElementById('step-counter').textContent = `${current + 1} / ${SLIDES.length}`;
+  document.getElementById('btn-prev').disabled = current === 0;
+  document.getElementById('btn-next').disabled = current === SLIDES.length - 1;
+}
+
+function advance(delta) {
+  current = Math.max(0, Math.min(SLIDES.length - 1, current + delta));
+  render();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') advance(1);
+  if (e.key === 'ArrowLeft') advance(-1);
+});
+
+render();
+</script>
+</body>
+</html>
