@@ -1,5 +1,3 @@
-# Security group for the ALB. No 443 here -- this app has no TLS
-# termination, the workshop only needs plain HTTP end to end.
 resource "aws_security_group" "alb" {
   name        = "part2-alb"
   description = "Public ALB Security Group"
