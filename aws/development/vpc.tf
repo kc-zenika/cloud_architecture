@@ -18,24 +18,26 @@ locals {
       ingress = [
         { rule_no = 100, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 80, to_port = 80 },
         { rule_no = 110, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 443, to_port = 443 },
-        { rule_no = 120, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 1024, to_port = 65535 }
+        { rule_no = 120, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 32768, to_port = 65535 }
       ]
       egress = [
         { rule_no = 100, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 80, to_port = 80 },
+        { rule_no = 105, protocol = "tcp", action = "allow", cidr_block = local.vpc_cidr_block, from_port = 8080, to_port = 8080 },
         { rule_no = 110, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 443, to_port = 443 },
-        { rule_no = 120, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 1024, to_port = 65535 }
+        { rule_no = 120, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 32768, to_port = 65535 }
       ]
     }
     private = {
       ingress = [
         { rule_no = 100, protocol = "tcp", action = "allow", cidr_block = local.vpc_cidr_block, from_port = 80, to_port = 80 },
+        { rule_no = 105, protocol = "tcp", action = "allow", cidr_block = local.vpc_cidr_block, from_port = 8080, to_port = 8080 },
         { rule_no = 110, protocol = "tcp", action = "allow", cidr_block = local.vpc_cidr_block, from_port = 443, to_port = 443 },
-        { rule_no = 120, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 1024, to_port = 65535 }
+        { rule_no = 120, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 32768, to_port = 65535 }
       ]
       egress = [
         { rule_no = 100, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 80, to_port = 80 },
         { rule_no = 110, protocol = "tcp", action = "allow", cidr_block = "0.0.0.0/0", from_port = 443, to_port = 443 },
-        { rule_no = 120, protocol = "tcp", action = "allow", cidr_block = local.vpc_cidr_block, from_port = 1024, to_port = 65535 }
+        { rule_no = 120, protocol = "tcp", action = "allow", cidr_block = local.vpc_cidr_block, from_port = 32768, to_port = 65535 }
       ]
     }
   }

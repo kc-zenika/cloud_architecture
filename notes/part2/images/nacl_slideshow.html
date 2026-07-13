@@ -358,7 +358,7 @@
         <tbody>
           <tr id="row-nacl-public-INBOUND-100"><td>100</td><td>TCP</td><td>80</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
           <tr id="row-nacl-public-INBOUND-110"><td>110</td><td>TCP</td><td>443</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
-          <tr id="row-nacl-public-INBOUND-120"><td>120</td><td>TCP</td><td>1024-65535</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-public-INBOUND-120"><td>120</td><td>TCP</td><td>32768-65535</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
           <tr id="row-nacl-public-INBOUND-star"><td>*</td><td>All</td><td>All</td><td>0.0.0.0/0</td><td><span class="badge-deny">DENY</span></td></tr>
         </tbody>
       </table>
@@ -371,7 +371,7 @@
         <tbody>
           <tr id="row-nacl-public-OUTBOUND-100"><td>100</td><td>TCP</td><td>80</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
           <tr id="row-nacl-public-OUTBOUND-110"><td>110</td><td>TCP</td><td>443</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
-          <tr id="row-nacl-public-OUTBOUND-120"><td>120</td><td>TCP</td><td>1024-65535</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-public-OUTBOUND-120"><td>120</td><td>TCP</td><td>32768-65535</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
           <tr id="row-nacl-public-OUTBOUND-star"><td>*</td><td>All</td><td>All</td><td>0.0.0.0/0</td><td><span class="badge-deny">DENY</span></td></tr>
         </tbody>
       </table>
@@ -389,7 +389,7 @@
         <tbody>
           <tr id="row-nacl-private-INBOUND-100"><td>100</td><td>TCP</td><td>80</td><td>10.0.0.0/16</td><td><span class="badge-allow">ALLOW</span></td></tr>
           <tr id="row-nacl-private-INBOUND-110"><td>110</td><td>TCP</td><td>443</td><td>10.0.0.0/16</td><td><span class="badge-allow">ALLOW</span></td></tr>
-          <tr id="row-nacl-private-INBOUND-120"><td>120</td><td>TCP</td><td>1024-65535</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-private-INBOUND-120"><td>120</td><td>TCP</td><td>32768-65535</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
           <tr id="row-nacl-private-INBOUND-star"><td>*</td><td>All</td><td>All</td><td>0.0.0.0/0</td><td><span class="badge-deny">DENY</span></td></tr>
         </tbody>
       </table>
@@ -401,7 +401,7 @@
         <thead><tr><th>#</th><th>Proto</th><th>Port</th><th>Dest</th><th>Action</th></tr></thead>
         <tbody>
           <tr id="row-nacl-private-OUTBOUND-110"><td>110</td><td>TCP</td><td>443</td><td>0.0.0.0/0</td><td><span class="badge-allow">ALLOW</span></td></tr>
-          <tr id="row-nacl-private-OUTBOUND-120"><td>120</td><td>TCP</td><td>1024-65535</td><td>10.0.0.0/16</td><td><span class="badge-allow">ALLOW</span></td></tr>
+          <tr id="row-nacl-private-OUTBOUND-120"><td>120</td><td>TCP</td><td>32768-65535</td><td>10.0.0.0/16</td><td><span class="badge-allow">ALLOW</span></td></tr>
           <tr id="row-nacl-private-OUTBOUND-star"><td>*</td><td>All</td><td>All</td><td>0.0.0.0/0</td><td><span class="badge-deny">DENY</span></td></tr>
         </tbody>
       </table>
@@ -453,14 +453,14 @@ const FLOWS = [
     { label: 'Request reaches the App. It processes the request and prepares a response.',
       packetAt: 'app', naclTable: null },
 
-    { label: 'App sends the response back on an ephemeral port (1024-65535). nacl-private evaluates outbound. Rule 120 matches: TCP 1024-65535 to 10.0.0.0/16 → ALLOW.',
+    { label: 'App sends the response back on an ephemeral port (32768-65535). nacl-private evaluates outbound. Rule 120 matches: TCP 32768-65535 to 10.0.0.0/16 → ALLOW.',
       packetAt: 'naclpriv',
       naclTable: { key: 'nacl-private-OUTBOUND', title: 'nacl-private', direction: 'OUTBOUND', highlight: 120 } },
 
     { label: 'Response returns to the ALB in the public subnet.',
       packetAt: 'alb', naclTable: null },
 
-    { label: 'ALB sends response to client. nacl-public evaluates outbound. Rule 120 matches: TCP 1024-65535 to 0.0.0.0/0 → ALLOW.',
+    { label: 'ALB sends response to client. nacl-public evaluates outbound. Rule 120 matches: TCP 32768-65535 to 0.0.0.0/0 → ALLOW.',
       packetAt: 'naclpub',
       naclTable: { key: 'nacl-public-OUTBOUND', title: 'nacl-public', direction: 'OUTBOUND', highlight: 120 } },
 
@@ -487,14 +487,14 @@ const FLOWS = [
     { label: 'Packet exits the VPC via IGW and reaches the remote repo on the internet.',
       packetAt: 'internet', naclTable: null },
 
-    { label: 'Repo sends the response back on an ephemeral port. nacl-public evaluates inbound. Rule 120 matches: TCP 1024-65535 from 0.0.0.0/0 → ALLOW. (This is why the source must be 0.0.0.0/0 — the response originates from the internet, not the VPC.)',
+    { label: 'Repo sends the response back on an ephemeral port. nacl-public evaluates inbound. Rule 120 matches: TCP 32768-65535 from 0.0.0.0/0 → ALLOW. (This is why the source must be 0.0.0.0/0 — the response originates from the internet, not the VPC.)',
       packetAt: 'naclpub',
       naclTable: { key: 'nacl-public-INBOUND', title: 'nacl-public', direction: 'INBOUND', highlight: 120 } },
 
     { label: 'Response arrives at the NAT Gateway, which translates the destination back to the App\'s private IP.',
       packetAt: 'nat', naclTable: null },
 
-    { label: 'NAT forwards response into the private subnet. nacl-private evaluates inbound. Rule 120 matches: TCP 1024-65535 from 0.0.0.0/0 → ALLOW. (Source must be 0.0.0.0/0 because NAT still presents the internet IP to the NACL.)',
+    { label: 'NAT forwards response into the private subnet. nacl-private evaluates inbound. Rule 120 matches: TCP 32768-65535 from 0.0.0.0/0 → ALLOW. (Source must be 0.0.0.0/0 because NAT still presents the internet IP to the NACL.)',
       packetAt: 'naclpriv',
       naclTable: { key: 'nacl-private-INBOUND', title: 'nacl-private', direction: 'INBOUND', highlight: 120 } },
 

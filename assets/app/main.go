@@ -133,7 +133,7 @@ func main() {
 	mux.Handle("GET /metrics", promhttp.Handler())
 
 	srv := &http.Server{
-		Addr:              ":80",
+		Addr:              ":8080",
 		Handler:           mux,
 		WriteTimeout:      5 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,

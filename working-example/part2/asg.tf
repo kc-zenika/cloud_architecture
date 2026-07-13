@@ -1,3 +1,5 @@
+# Superseded by module.asg in compute.tf -- kept here, commented out, as a
+# "before" reference for notes/part2/advanced/2.4_tf_modules.md.
 
 resource "aws_autoscaling_group" "app" {
   name             = "part2-app-asg"
