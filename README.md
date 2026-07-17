@@ -16,3 +16,4 @@
 ## Part 2
 - Prerequisites
   - install aws, docker, terraform
+- TODO
