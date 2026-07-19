@@ -1014,6 +1014,15 @@
 							x2="228"
 							y2="416"
 						/>
+						<!-- CloudFront → Region B S3 (dashed): long diagonal, drawn here so it passes behind Region A -->
+						<line
+							class="edge dashed"
+							data-since="large"
+							x1="172"
+							y1="98"
+							x2="585"
+							y2="420"
+						/>
 						<!-- global tables (active-active): DynamoDB ↔ DynamoDB, routed under the boxes -->
 						<path
 							class="edge"
@@ -2082,7 +2091,8 @@
 						'<div class="svc svc-c"><div class="svc-h">Upload</div>Takes a photo in and writes it to storage.</div>' +
 						'<div class="svc svc-c"><div class="svc-h">Download</div>Serves stored photos back out to viewers.</div>' +
 						'<div class="svc svc-c"><div class="svc-h">Search</div>Finds images by keyword or tag.</div>' +
-						'<div class="svc svc-d"><div class="svc-h">Metadata</div>Maps each <code>image_id</code> → its tags, owner, and where the file lives.</div>' +
+						'<div class="svc svc-d"><div class="svc-h">Metadata</div>Maps each <code>image_id</code> → its tags, owner, and where the files live.</div>' +
+						'<div class="svc svc-d"><div class="svc-h">Storage</div>Service to interface with the storage of choice where the images live.</div>' +
 						'</div>',
 				},
 				{
