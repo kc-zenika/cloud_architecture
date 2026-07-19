@@ -102,6 +102,97 @@
     display: block;
   }
 
+  .analogy-frame {
+    flex: 1;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    background: #0b1220;
+    display: none;
+    padding: 12px;
+  }
+
+  .analogy-split {
+    height: 100%;
+    display: flex;
+  }
+
+  .analogy-grid {
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 56px 1fr;
+    grid-template-rows: 24px repeat(8, minmax(36px, 1fr));
+    gap: 8px 10px;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .analogy-list {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px;
+    display: grid;
+    grid-template-rows: repeat(8, minmax(36px, 1fr));
+    gap: 8px;
+  }
+
+  .analogy-col-left {
+    grid-column: 1;
+    grid-row: 2 / span 8;
+  }
+
+  .analogy-col-right {
+    grid-column: 3;
+    grid-row: 2 / span 8;
+  }
+
+  .analogy-col-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #60a5fa;
+    text-transform: uppercase;
+    margin-bottom: 0;
+    align-self: end;
+  }
+
+  .analogy-col-title-left {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .analogy-col-title-right {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .analogy-item {
+    display: flex;
+    align-items: center;
+    background: #111b2f;
+    border: 1px solid #334155;
+    border-radius: 7px;
+    padding: 7px 8px;
+    font-size: 0.8rem;
+    color: #dbe6f5;
+  }
+
+  .analogy-arrow-col {
+    display: grid;
+    grid-template-rows: 24px repeat(8, minmax(36px, 1fr));
+    gap: 8px;
+    align-items: center;
+    grid-column: 2;
+    grid-row: 1 / span 9;
+  }
+
+  .analogy-arrow {
+    text-align: center;
+    color: #64748b;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
   .flow-frame {
     flex: 1;
     border: 1px solid #334155;
@@ -129,6 +220,86 @@
     font-size: 0.8rem;
     color: #94a3b8;
     min-height: 36px;
+  }
+
+  .flow-rules {
+    border-top: 1px solid #334155;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    background: #0b1220;
+  }
+
+  .flow-rule-col-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #a78bfa;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .flow-rule-section {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 8px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .flow-rule-section.active {
+    border-color: #7c3aed;
+    box-shadow: 0 0 0 1px rgba(124,58,237,0.25);
+  }
+
+  .flow-dir-title {
+    font-size: 0.68rem;
+    margin-bottom: 6px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .flow-rule-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.7rem;
+  }
+
+  .flow-rule-table th {
+    text-align: left;
+    padding: 3px 4px;
+    color: #64748b;
+    font-weight: 600;
+    border-bottom: 1px solid #1e293b;
+  }
+
+  .flow-rule-table td {
+    padding: 4px;
+    color: #94a3b8;
+    border-bottom: 1px solid #1e293b;
+  }
+
+  .flow-rule-table tr.hit td {
+    background: rgba(59,130,246,0.1);
+    color: #e2e8f0;
+  }
+
+  .flow-rule-table tr.active td {
+    background: rgba(34,197,94,0.14);
+    color: #e2e8f0;
+    font-weight: 700;
+  }
+
+  .flow-badge-allow {
+    background: rgba(34,197,94,0.15);
+    color: #4ade80;
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 0.68rem;
+    font-weight: 700;
   }
 
   .f-edge {
@@ -281,6 +452,8 @@
   @media (max-width: 880px) {
     .stage { grid-template-columns: 1fr; }
     .diagram-wrap { min-height: 320px; }
+    .flow-rules { grid-template-columns: 1fr; }
+    .analogy-split { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -296,6 +469,44 @@
       <div class="viz-title" id="viz-title"></div>
       <div class="arch-frame" id="arch-frame">
         <img src="../../part1/architecture.png" alt="Part 1 architecture">
+      </div>
+      <div class="analogy-frame" id="analogy-frame" aria-label="AWS to office analogy mapping">
+        <div class="analogy-split">
+          <div class="analogy-grid">
+            <div class="analogy-col-title analogy-col-title-left">AWS Term</div>
+            <div class="analogy-list analogy-col-left">
+              <div class="analogy-item">VPC</div>
+              <div class="analogy-item">Public Subnet</div>
+              <div class="analogy-item">Private Subnet</div>
+              <div class="analogy-item">Route Table</div>
+              <div class="analogy-item">IGW</div>
+              <div class="analogy-item">NACL</div>
+              <div class="analogy-item">Security Group</div>
+              <div class="analogy-item">ALB</div>
+            </div>
+            <div class="analogy-arrow-col" aria-hidden="true">
+              <div></div>
+              <div class="analogy-arrow">-></div>
+              <div class="analogy-arrow">-></div>
+              <div class="analogy-arrow">-></div>
+              <div class="analogy-arrow">-></div>
+              <div class="analogy-arrow">-></div>
+              <div class="analogy-arrow">-></div>
+              <div class="analogy-arrow">-></div>
+            </div>
+            <div class="analogy-col-title analogy-col-title-right">Office Analogy</div>
+            <div class="analogy-list analogy-col-right">
+              <div class="analogy-item">Office compound</div>
+              <div class="analogy-item">Reception floor</div>
+              <div class="analogy-item">Staff-only floor</div>
+              <div class="analogy-item">Building direction board</div>
+              <div class="analogy-item">Front gate</div>
+              <div class="analogy-item">Floor-level checkpoint rules</div>
+              <div class="analogy-item">Room door access list</div>
+              <div class="analogy-item">Receptionist routing visitors</div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="flow-frame" id="flow-frame">
         <div class="flow-wrap">
@@ -337,6 +548,54 @@
           </svg>
         </div>
         <div class="flow-note" id="flow-note"></div>
+        <div class="flow-rules" id="flow-rules">
+          <div>
+            <div class="flow-rule-col-title">nacl-public</div>
+            <div class="flow-rule-section" id="f-sect-nacl-public-INBOUND">
+              <div class="flow-dir-title">Inbound</div>
+              <table class="flow-rule-table">
+                <thead><tr><th>#</th><th>Port</th><th>Source</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr id="f-row-nacl-public-INBOUND-110"><td>110</td><td>443</td><td>0.0.0.0/0</td><td><span class="flow-badge-allow">ALLOW</span></td></tr>
+                  <tr id="f-row-nacl-public-INBOUND-120"><td>120</td><td>1024-65535</td><td>0.0.0.0/0</td><td><span class="flow-badge-allow">ALLOW</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="flow-rule-section" id="f-sect-nacl-public-OUTBOUND">
+              <div class="flow-dir-title">Outbound</div>
+              <table class="flow-rule-table">
+                <thead><tr><th>#</th><th>Port</th><th>Dest</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr id="f-row-nacl-public-OUTBOUND-110"><td>110</td><td>443</td><td>0.0.0.0/0</td><td><span class="flow-badge-allow">ALLOW</span></td></tr>
+                  <tr id="f-row-nacl-public-OUTBOUND-120"><td>120</td><td>1024-65535</td><td>0.0.0.0/0</td><td><span class="flow-badge-allow">ALLOW</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <div class="flow-rule-col-title">nacl-private</div>
+            <div class="flow-rule-section" id="f-sect-nacl-private-INBOUND">
+              <div class="flow-dir-title">Inbound</div>
+              <table class="flow-rule-table">
+                <thead><tr><th>#</th><th>Port</th><th>Source</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr id="f-row-nacl-private-INBOUND-110"><td>110</td><td>443</td><td>10.0.0.0/16</td><td><span class="flow-badge-allow">ALLOW</span></td></tr>
+                  <tr id="f-row-nacl-private-INBOUND-120"><td>120</td><td>1024-65535</td><td>0.0.0.0/0</td><td><span class="flow-badge-allow">ALLOW</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="flow-rule-section" id="f-sect-nacl-private-OUTBOUND">
+              <div class="flow-dir-title">Outbound</div>
+              <table class="flow-rule-table">
+                <thead><tr><th>#</th><th>Port</th><th>Dest</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr id="f-row-nacl-private-OUTBOUND-110"><td>110</td><td>443</td><td>0.0.0.0/0</td><td><span class="flow-badge-allow">ALLOW</span></td></tr>
+                  <tr id="f-row-nacl-private-OUTBOUND-120"><td>120</td><td>1024-65535</td><td>10.0.0.0/16</td><td><span class="flow-badge-allow">ALLOW</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
       <ul class="viz-list" id="viz-list"></ul>
     </div>
@@ -364,11 +623,11 @@ const SLIDES = [
     title: 'What You Built In Part 1',
     sub: 'This is the complete system you assembled before Part 2.',
     points: [
-      'VPC with public and private subnets across AZs.',
-      'IGW, NAT Gateway, route tables, NACLs, and Security Groups.',
-      'ALB in public subnet and EC2 app in private subnet.',
-      'IAM role + instance profile, and VPC endpoints for private service access.',
-      'Terraform workflow with remote state in S3 + lock in DynamoDB.'
+      'VPC with public and private subnets across multiple Availability Zones.',
+      'Internet Gateway, NAT Gateway, Route Tables, NACLs, and Security Groups.',
+      'Application Load Balancer in the public subnet and EC2 application in the private subnet.',
+      'IAM role and instance profile for secure AWS access.',
+      'VPC Endpoints for private access to AWS services.'
     ],
     vizTitle: 'Part 1 Architecture',
     vizMode: 'image',
@@ -377,35 +636,33 @@ const SLIDES = [
   {
     chip: '2. Analogy',
     kicker: 'Mental Model',
-    title: 'Office Building Analogy (Optional Lens)',
-    sub: 'Use this only if it helps your understanding; default to AWS terms when in doubt.',
+    title: 'Understanding AWS Through an Office Building',
+    sub: 'We will use a familiar office building to build intuition first. Once the concepts click, we will switch back to the actual AWS terminology.',
     points: [
-      'VPC = office compound, subnet = floor, route table = directional signs.',
-      'IGW = front gate, NAT = outbound mailroom.',
-      'NACL = floor security desk, Security Group = room-level access control.',
-      'ALB = receptionist routing incoming visitors.'
+      'You can use this analogy to remember what each network component does.',
+      'You should be able to explain traffic direction and access boundaries using this map.',
+      'After this slide, try saying the same explanation again using only AWS terms (VPC, subnet, IGW, NAT, ALB).' 
     ],
     vizTitle: 'Analogy Mapping',
-    vizMode: 'list',
-    vizItems: [
-      'VPC -> Office compound',
-      'Public subnet -> Reception floor',
-      'Private subnet -> Staff-only floor',
-      'IGW -> Front gate',
-      'NAT -> Outbound mailroom',
-      'ALB -> Receptionist'
-    ]
+    vizMode: 'analogy',
+    vizItems: []
   },
   {
     chip: '3. Network',
     kicker: 'Networking Fundamentals',
-    title: 'VPC, Subnets, Routes, IGW, NAT',
+    title: 'VPC, Subnets, Routes, IGW, NAT, Endpoints',
     sub: 'Core networking logic that drives all packet behavior in your architecture.',
     points: [
+      'Definition: VPC = your isolated private network in AWS.',
+      'Definition: Route table = routing rules that decide where packets go next.',
+      'Definition: IGW (Internet Gateway) = the gateway that connects your VPC to the internet.',
+      'Definition: NAT Gateway = outbound-only internet access for private subnet instances.',
+      'Definition: VPC endpoint = private connectivity from your VPC to supported AWS services.',
       'Public subnet default route: 0.0.0.0/0 -> IGW.',
       'Private subnet default route: 0.0.0.0/0 -> NAT Gateway.',
       '0.0.0.0/0 means any destination not inside your VPC.',
       'Subnets are AZ-specific; spread across AZs for resilience.',
+      'Use interface endpoints for SSM and gateway endpoint for S3 to keep AWS service traffic private.',
       'CIDR planning early avoids overlap and migration pain later.'
     ],
     vizTitle: 'Routing Snapshot',
@@ -414,15 +671,39 @@ const SLIDES = [
       'Public route table: default route to IGW',
       'Private route table: default route to NAT',
       'IGW: internet path',
-      'NAT: outbound-only bridge for private workloads'
+      'NAT: outbound-only bridge for private workloads',
+      'Endpoints: private access path to SSM and S3'
     ]
   },
   {
-    chip: '4. Flow 1',
+    chip: '4. NACL vs SG',
+    kicker: 'Security Layers',
+    title: 'Why You Need Both NACL and Security Group',
+    sub: 'NACL and SG look similar but solve different control problems.',
+    points: [
+      'Definition: NACL (Network ACL) = stateless subnet-level firewall with ordered allow/deny rules.',
+      'Definition: Security Group = stateful instance-level firewall with allow rules only.',
+      'NACL is subnet-level, stateless, ordered, and supports allow/deny rules.',
+      'Security Group is resource-level, stateful, and allow-only.',
+      'NACL needs explicit ephemeral return-path rules because it is stateless.',
+      'Security Group captures app intent, for example app SG allows ingress only from ALB SG.',
+      'Using both gives defense in depth: broad subnet guardrails plus workload-level intent.'
+    ],
+    vizTitle: 'Comparison',
+    vizMode: 'list',
+    vizItems: [
+      'NACL: subnet guardrails, explicit return rules',
+      'SG: workload intent, automatic return allowance',
+      'Use both together for layered control'
+    ]
+  },
+  {
+    chip: '5. Flow 1',
     kicker: 'Packet Flow #1',
     title: 'User -> ALB -> EC2 (Request/Response)',
     sub: 'How client traffic reaches the app while keeping EC2 private.',
     points: [
+      'Definition: ALB (Application Load Balancer) = distributes Layer 7 traffic to healthy targets.',
       'Browser sends HTTPS to ALB on TCP 443.',
       'Public NACL inbound Rule 110 allows 443 from internet.',
       'ALB forwards traffic to EC2 in private subnet.',
@@ -440,7 +721,7 @@ const SLIDES = [
     ]
   },
   {
-    chip: '5. Flow 2',
+    chip: '6. Flow 2',
     kicker: 'Packet Flow #2',
     title: 'EC2 -> NAT -> Internet (Outbound/Return)',
     sub: 'How private instances fetch external dependencies safely.',
@@ -462,77 +743,66 @@ const SLIDES = [
     ]
   },
   {
-    chip: '6. NACL vs SG',
-    kicker: 'Security Layers',
-    title: 'NACL vs Security Group',
-    sub: 'Know when each layer should carry the policy intent.',
-    points: [
-      'NACL is subnet-level, stateless, ordered, and supports allow/deny.',
-      'Security Group is ENI-level, stateful, and allow-only.',
-      'NACL needs explicit return path rules for ephemeral traffic.',
-      'Workshop SG pattern: ALB SG -> app SG for ingress chaining.'
-    ],
-    vizTitle: 'Comparison',
-    vizMode: 'list',
-    vizItems: [
-      'NACL: coarse perimeter guardrails',
-      'SG: fine-grained workload intent',
-      'Stateful vs stateless is the key behavior difference'
-    ]
-  },
-  {
     chip: '7. Exercises',
     kicker: 'Interactive Practice',
-    title: 'RDS, NAT Failure, and VPC Endpoints',
+    title: 'RDS and NAT Failure Drills',
     sub: 'Use these prompts to test if you can apply the model, not just repeat it.',
     points: [
       'RDS placement: private subnets + DB subnet group + SG rules.',
       'NAT failure: private outbound breaks first; inbound path may still work.',
-      'VPC endpoints: Interface for SSM APIs, Gateway for S3 route-level integration.'
+      'Explain the blast radius clearly: package installs, external APIs, and outbound integrations fail first.'
     ],
     vizTitle: 'Exercise Targets',
     vizMode: 'list',
     vizItems: [
       'Design decision: where to place DB',
       'Failure analysis: NAT outage blast radius',
-      'Connectivity design: SSM and S3 endpoint types'
+      'Checkpoint: endpoint types were covered in Network section'
     ]
   },
   {
     chip: '8. IAM',
     kicker: 'Identity and Access',
-    title: 'Role -> Instance Profile -> Temporary Credentials',
-    sub: 'How EC2 safely accesses AWS services without static keys.',
+    title: 'Policy -> Role -> Instance Profile (Then Credentials)',
+    sub: 'Learn the IAM chain first, then connect it to how EC2 receives temporary credentials.',
     points: [
-      'Custom policy granted S3 read permissions for app assets.',
-      'Trust policy allowed ec2.amazonaws.com to assume role.',
-      'AmazonSSMManagedInstanceCore enabled SSM management path.',
-      'Instance profile attached role to EC2; credentials delivered via IMDS.'
+      'IAM controls who can do what in AWS, and under which conditions.',
+      'IAM policy = JSON permission document that allows or denies actions on resources.',
+      'IAM role = assumable identity that carries policies for services or users.',
+      'Policy answers: what actions are allowed or denied.',
+      'Role answers: which identity/service can use those permissions.',
+      'Identity means IAM user/role; principal means the actor making the request in policy logic.',
+      'Trust policy allowed ec2.amazonaws.com to assume role; instance profile attached role to EC2.',
+      'Credentials are temporary and delivered via IMDS, avoiding static access keys on instances.'
     ],
     vizTitle: 'IAM Chain',
     vizMode: 'list',
     vizItems: [
-      'Policy: what is allowed',
-      'Role: who can use policy',
-      'Instance profile: bind role to EC2',
-      'IMDS: temporary credential delivery'
+      'Policy = permission rules',
+      'Role = assumable identity',
+      'Instance profile = attach role to EC2',
+      'IMDS = temporary credential delivery'
     ]
   },
   {
     chip: '9. EC2',
     kicker: 'Compute Provisioning',
-    title: 'AMI, User Data, Debugging, Cattle Mindset',
-    sub: 'What you configured and how you verified app startup behavior.',
+    title: 'EC2: Config Path and Debug Path',
+    sub: 'Split what we configure from how we troubleshoot, and explain why each step exists.',
     points: [
-      'AMI sets the base OS image and root behavior.',
-      'User data installs nginx, pulls app content from S3, and customizes output.',
-      'Debug loop: systemctl status, curl localhost, cloud-init logs, IMDS checks.',
-      'If drift occurs, rebuild from code rather than hand-fixing snowflake instances.'
+      'EC2 = virtual server instance running inside AWS.',
+      'User data = startup script that runs automatically when EC2 boots.',
+      'Config path: choose AMI, attach role, run user data, pull content, start service.',
+      'Why config matters: consistent bootstrap and fast replacement.',
+      'Debug path: systemctl status, curl localhost, cloud-init logs, and IMDS/role validation.',
+      'Why debug order matters: isolate app, network, and IAM failure domains quickly.',
+      'Operating model: cattle not pets, replace drifted nodes from code.'
     ],
     vizTitle: 'EC2 Validation Loop',
     vizMode: 'list',
     vizItems: [
-      'Bootstrap -> Verify service -> Verify content -> Check logs',
+      'Config: AMI -> role -> user data -> service',
+      'Debug: service -> local curl -> logs -> credentials',
       'Recreate instances when needed (cattle, not pets)'
     ]
   },
@@ -545,7 +815,6 @@ const SLIDES = [
       'resource blocks define desired infrastructure state.',
       'plan previews drift and pending changes before execution.',
       'Remote S3 backend centralizes state for shared visibility.',
-      'DynamoDB locking prevents simultaneous apply conflicts.',
       'terraform import can re-capture manually created resources.'
     ],
     vizTitle: 'Terraform Essentials',
@@ -553,7 +822,7 @@ const SLIDES = [
     vizItems: [
       'init -> plan -> apply -> destroy',
       'State is Terraform memory',
-      'Remote backend + locking enables team safety'
+      'Remote backend in S3 enables team visibility'
     ]
   },
   {
@@ -566,7 +835,7 @@ const SLIDES = [
       'Why private subnet needs NAT for outbound internet.',
       'Why stateless NACL requires explicit ephemeral rules.',
       'Why role + instance profile beats static credentials.',
-      'Why remote state + lock is required for reliable collaboration.'
+      'Why remote state in S3 is required for reliable collaboration.'
     ],
     vizTitle: 'Pass Criteria',
     vizMode: 'list',
@@ -631,6 +900,35 @@ const FLOW_NOTES = {
   ]
 };
 
+const FLOW_RULE_HITS = {
+  flow1: [
+    null,
+    null,
+    { key: 'nacl-public-INBOUND', rule: '110' },
+    null,
+    { key: 'nacl-private-INBOUND', rule: '110' },
+    null,
+    { key: 'nacl-private-OUTBOUND', rule: '120' },
+    null,
+    { key: 'nacl-public-OUTBOUND', rule: '120' },
+    null,
+    null
+  ],
+  flow2: [
+    null,
+    { key: 'nacl-private-OUTBOUND', rule: '110' },
+    null,
+    { key: 'nacl-public-OUTBOUND', rule: '110' },
+    null,
+    null,
+    null,
+    { key: 'nacl-public-INBOUND', rule: '120' },
+    null,
+    { key: 'nacl-private-INBOUND', rule: '120' },
+    null
+  ]
+};
+
 function flowEdgeKey(a, b) {
   const pairs = [
     ['internet', 'igw'],
@@ -650,10 +948,31 @@ function flowEdgeKey(a, b) {
 function resetFlowVisuals() {
   document.querySelectorAll('.f-edge').forEach((e) => e.classList.remove('active', 'used'));
   document.querySelectorAll('.f-node').forEach((n) => n.classList.remove('active'));
+  document.querySelectorAll('.flow-rule-table tr').forEach((r) => r.classList.remove('hit', 'active'));
+  document.querySelectorAll('.flow-rule-section').forEach((s) => s.classList.remove('active'));
   const pkt = document.getElementById('flow-packet');
   pkt.setAttribute('cx', FLOW_NODES.internet.cx);
   pkt.setAttribute('cy', FLOW_NODES.internet.cy);
   document.getElementById('flow-note').textContent = '';
+}
+
+function renderFlowRuleHighlights(mode) {
+  const hits = FLOW_RULE_HITS[mode] || [];
+  document.querySelectorAll('.flow-rule-table tr').forEach((r) => r.classList.remove('hit', 'active'));
+  document.querySelectorAll('.flow-rule-section').forEach((s) => s.classList.remove('active'));
+
+  for (let i = 0; i <= flowStep; i++) {
+    const hit = hits[i];
+    if (!hit) continue;
+    const row = document.getElementById(`f-row-${hit.key}-${hit.rule}`);
+    if (row) row.classList.add(i === flowStep ? 'active' : 'hit');
+  }
+
+  const currentHit = hits[flowStep];
+  if (currentHit) {
+    const section = document.getElementById(`f-sect-${currentHit.key}`);
+    if (section) section.classList.add('active');
+  }
 }
 
 function stopFlowAnimation() {
@@ -687,6 +1006,7 @@ function renderFlowStep(mode) {
   if (nodeEl) nodeEl.classList.add('active');
 
   document.getElementById('flow-note').textContent = FLOW_NOTES[mode][flowStep] || '';
+  renderFlowRuleHighlights(mode);
 }
 
 function startFlowAnimation(mode) {
@@ -728,6 +1048,7 @@ function render() {
 
   const listEl = document.getElementById('viz-list');
   const flowFrame = document.getElementById('flow-frame');
+  const analogyFrame = document.getElementById('analogy-frame');
   listEl.innerHTML = '';
   slide.vizItems.forEach((item) => {
     const li = document.createElement('li');
@@ -739,16 +1060,25 @@ function render() {
   if (slide.vizMode === 'image') {
     stopFlowAnimation();
     archFrame.style.display = 'flex';
+    analogyFrame.style.display = 'none';
+    flowFrame.style.display = 'none';
+    listEl.style.display = 'none';
+  } else if (slide.vizMode === 'analogy') {
+    stopFlowAnimation();
+    archFrame.style.display = 'none';
+    analogyFrame.style.display = 'flex';
     flowFrame.style.display = 'none';
     listEl.style.display = 'none';
   } else if (slide.vizMode === 'flow1' || slide.vizMode === 'flow2') {
     archFrame.style.display = 'none';
+    analogyFrame.style.display = 'none';
     listEl.style.display = 'none';
     flowFrame.style.display = 'flex';
     startFlowAnimation(slide.vizMode);
   } else {
     stopFlowAnimation();
     archFrame.style.display = 'none';
+    analogyFrame.style.display = 'none';
     flowFrame.style.display = 'none';
     listEl.style.display = 'grid';
   }
