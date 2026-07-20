@@ -48,6 +48,12 @@ aws s3api put-bucket-tagging \
 echo
 echo "Done. Bucket: s3://${BUCKET_NAME} (region: ${REGION})"
 echo
-echo "Next step: update aws/development/provider.tf backend block --"
+echo "Next step: you have to update aws/development/provider.tf"
+echo
+echo "-- backend block --"
 echo "  replace bucket = \"workshop-tfstate-<ACCOUNT_ID>\""
 echo "  with    bucket = \"workshop-tfstate-${ACCOUNT_ID}\""
+echo
+echo "-- locals block --"
+echo "  replace account_id = \"<ACCOUNT_ID>\""
+echo "  with    account_id = \"${ACCOUNT_ID}\""
